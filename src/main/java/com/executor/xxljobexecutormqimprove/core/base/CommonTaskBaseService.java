@@ -34,4 +34,7 @@ public class CommonTaskBaseService {
         commonTaskMapper.updateTaskTriggerInfo(changeTaskInfoDTO);
     }
 
+    public int deleteData(){
+        return commonTaskMapper.deleteDisabledTasks();
+    }
 }

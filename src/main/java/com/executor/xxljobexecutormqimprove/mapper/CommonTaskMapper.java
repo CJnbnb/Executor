@@ -27,4 +27,5 @@ public interface CommonTaskMapper {
     );
 
     void updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
+    int deleteDisabledTasks();
 }

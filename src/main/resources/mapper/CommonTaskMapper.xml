@@ -58,5 +58,10 @@
             enable = #{enable}
         WHERE id = #{id}
     </update>
-        
+
+    <!-- CommonTaskMapper.xml -->
+    <delete id="deleteDisabledTasks">
+        DELETE FROM user_scheduled_common_task WHERE enable = '0'
+    </delete>
+
 </mapper>
