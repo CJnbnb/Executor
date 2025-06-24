@@ -22,9 +22,7 @@ public interface CommonTaskMapper {
             @Param("limit") Integer limit
     );
 
-    int unlockTasks(
-            @Param("ids") List<String> ids
-    );
+    int unlockTasks(@Param("ids") List<String> ids);
 
     void updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
     int deleteDisabledTasks();

@@ -4,6 +4,7 @@ import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
+import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.slf4j.Logger;
@@ -42,12 +43,14 @@ public class ProducerHandler {
          */
         String param = XxlJobHelper.getJobParam();
         String[] remoteArg = param.split(",");
+        remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
         String bizName = null;
         String bizGroup = null;
         if (remoteArg.length == 2){
             bizName = remoteArg[0];
             bizGroup = remoteArg[1];
         }
+
         long now = System.currentTimeMillis();
         long triggerTime = now;
 
