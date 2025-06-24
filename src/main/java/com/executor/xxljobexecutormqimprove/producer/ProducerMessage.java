@@ -40,6 +40,7 @@ public class ProducerMessage {
         String messageBody = produceCommonTaskMessage.getPayload();
         Message message =  new Message(topic,tag,messageBody.getBytes());
         try {
+            logger.info(String.valueOf(message));
             SendResult result = producer.send(message);
             logger.info("result{}",result);
         }catch (Exception e){

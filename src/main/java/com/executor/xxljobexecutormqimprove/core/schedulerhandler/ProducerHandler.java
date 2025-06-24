@@ -37,7 +37,6 @@ public class ProducerHandler {
     private CommonTaskService commonTaskService;
     @XxlJob("Executor")
     public void producerMessage(){
-        logger.info("进入执行逻辑");
         /**
          * 加个校验逻辑
          */
@@ -50,14 +49,13 @@ public class ProducerHandler {
             bizGroup = remoteArg[1];
         }
         long now = System.currentTimeMillis();
-        long triggerTime = now + 50_000;
+        long triggerTime = now;
 
         //指定事务位置
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
         def.setName("lockData");
         def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         TransactionStatus status = transactionManager.getTransaction(def);
-        logger.info("开启锁定事务");
 
         //短事务提交
         List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
@@ -68,6 +66,7 @@ public class ProducerHandler {
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
             commonTaskBaseService.lockTaskById(ids);
             transactionManager.commit(status);
+            logger.info("锁定事务成功");
         }catch (Exception e){
             logger.error("数据库事务添加错误{}",e.getMessage());
             throw e;
