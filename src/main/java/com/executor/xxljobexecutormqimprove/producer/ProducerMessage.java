@@ -1,6 +1,7 @@
 package com.executor.xxljobexecutormqimprove.producer;
 
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
 import jakarta.annotation.PreDestroy;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -33,10 +34,10 @@ public class ProducerMessage {
         logger.info("---- RocketMQ Producer started ----");
     }
 
-    public boolean sendTask(CommonTaskDTO commonTaskDTO){
-        String topic = commonTaskDTO.getTopic();
-        String tag = commonTaskDTO.getBizName();
-        String messageBody = commonTaskDTO.getPayload();
+    public boolean send(ProduceCommonTaskMessage produceCommonTaskMessage){
+        String topic = produceCommonTaskMessage.getTopic();
+        String tag = produceCommonTaskMessage.getTaskName();
+        String messageBody = produceCommonTaskMessage.getPayload();
         Message message =  new Message(topic,tag,messageBody.getBytes());
         try {
             SendResult result = producer.send(message);

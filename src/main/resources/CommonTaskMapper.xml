@@ -7,11 +7,11 @@
 
     <!-- 这里写你的SQL语句 -->
 
-    <insert id="upsetTskInfo">
+    <insert id="upsetTskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
         insert into user_scheduled_common_task (id, task_name, biz_name, biz_group, next_trigger_time, scheduled_conf,
                                                 create_at, update_at, scheduled_type, enable, payload)
         VALUES (#{id}, #{task_name}, #{biz_name}, #{biz_group}, #{next_trigger_time}, #{scheduled_conf}, #{create_at},
-                #{update_at}, #{scheduled_type}, #{enable,payload}) ON DUPLICATE KEY
+                #{update_at}, #{scheduled_type}, #{enable},#{payload}) ON DUPLICATE KEY
         UPDATE
             next_trigger_time = VALUES (next_trigger_time),
             scheduled_conf = VALUES (scheduled_conf),
@@ -20,4 +20,42 @@
             enable = VALUES (enable),
             payload = VALUES (payload)
     </insert>
+
+
+    <select id="lockAndSelectTasks" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+        SELECT * FROM user_scheduled_common_task
+        WHERE biz_name = #{bizName}
+        AND biz_group = #{bizGroup}
+        AND next_trigger_time &lt; #{end}
+        AND process != 'processing'
+        LIMIT #{limit}
+        FOR UPDATE;  <!-- 关键：查询时立即加锁 -->
+    </select>
+
+    <update id="lockTaskById">
+        UPDATE user_scheduled_common_task
+        SET process = 'processing'
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="unlockTasks" parameterType="map">
+        UPDATE user_scheduled_common_task
+        SET process = "done"
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO">
+        UPDATE user_scheduled_common_task
+        SET last_trigger_time = #{lastTriggerTime},
+            next_trigger_time = #{nextTriggerTime},
+            enable = #{enable}
+        WHERE id = #{id}
+    </update>
+        
 </mapper>

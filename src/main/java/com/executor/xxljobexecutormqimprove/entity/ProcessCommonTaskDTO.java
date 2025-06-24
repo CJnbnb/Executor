@@ -5,7 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class CommonTaskDTO implements Serializable{
+public class ProcessCommonTaskDTO implements Serializable{
     private String taskName;
     private String bizName;
     private String bizGroup;

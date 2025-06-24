@@ -1,10 +1,10 @@
 package com.executor.xxljobexecutormqimprove.process;
 
 import com.alibaba.fastjson.JSONObject;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
 import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
-import com.executor.xxljobexecutormqimprove.core.base.CommonTaskService;
+import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.util.CronTimeUtil;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -32,7 +32,7 @@ public class Processor implements MessageListenerConcurrently {
     private RocketMQEntity rocketMQEntity;
 
     @Autowired
-    private CommonTaskService commonTaskService;
+    private CommonTaskBaseService commonTaskBaseService;
 
     private DefaultMQPushConsumer consumer;
 
@@ -50,7 +50,7 @@ public class Processor implements MessageListenerConcurrently {
         for (MessageExt msg : msgs){
             try{
                 String messageBody = new String(msg.getBody());
-                CommonTaskDTO task = JSONObject.parseObject(messageBody, CommonTaskDTO.class);
+                ProcessCommonTaskDTO task = JSONObject.parseObject(messageBody, ProcessCommonTaskDTO.class);
                 process(task);
                 logger.info("收到信息{}",task);
             }catch (Exception e){
@@ -61,15 +61,15 @@ public class Processor implements MessageListenerConcurrently {
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
 
-    private void process(CommonTaskDTO taskDTO) {
+    private void process(ProcessCommonTaskDTO taskDTO) {
         // 补充本地生成字段
         CommonTaskEntity entity = transFormat(taskDTO);
         logger.info("转为任务实体: {}", entity);
-        commonTaskService.upsetTask(entity);
+        commonTaskBaseService.upsetTask(entity);
 
     }
 
-    private CommonTaskEntity transFormat(CommonTaskDTO dto) {
+    private CommonTaskEntity transFormat(ProcessCommonTaskDTO dto) {
         CommonTaskEntity entity = new CommonTaskEntity();
 
         entity.setId(System.currentTimeMillis() + "-" + ThreadLocalRandom.current().nextInt(1000, 9999));
