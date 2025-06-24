@@ -28,7 +28,7 @@ public class CommonTaskServiceImpl implements CommonTaskService{
             try {
                 nextTriggerTime = CronTimeUtil.getNextTriggerTime(produceCommonTaskMessage.getScheduledConf(),System.currentTimeMillis());
             }catch (Exception e){
-                logger.error("生成时间失败");
+                logger.error("生成时间失败{}",e.getMessage());
             }
         }else {
             enable = TaskEnableEnum.TASK_UNABLE;

@@ -27,7 +27,7 @@
         WHERE biz_name = #{bizName}
         AND biz_group = #{bizGroup}
         AND next_trigger_time &lt; #{end}
-        AND process != 'processing'
+        AND (process IS NULL OR process != 'processing')
         LIMIT #{limit}
         FOR UPDATE;  <!-- 关键：查询时立即加锁 -->
     </select>
