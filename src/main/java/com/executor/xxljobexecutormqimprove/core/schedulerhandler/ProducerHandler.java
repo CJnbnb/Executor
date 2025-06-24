@@ -6,6 +6,7 @@ import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,20 @@ public class ProducerHandler {
 
     @Autowired
     private CommonTaskService commonTaskService;
+
+    @PreDestroy
+    public void shutdownThreadPool() {
+        logger.info("正在关闭mqSendPoolExecutor线程池...");
+        mqSendPoolExecutor.shutdown();
+        try {
+            if (!mqSendPoolExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                mqSendPoolExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            mqSendPoolExecutor.shutdownNow();
+        }
+        logger.info("mqSendPoolExecutor线程池已关闭");
+    }
 
     private static final ThreadPoolExecutor mqSendPoolExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2, Runtime.getRuntime().availableProcessors() * 2, 0L, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
     @XxlJob("Executor")
