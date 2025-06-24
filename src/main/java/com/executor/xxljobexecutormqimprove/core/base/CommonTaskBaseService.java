@@ -4,6 +4,7 @@ import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.mapper.CommonTaskMapper;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

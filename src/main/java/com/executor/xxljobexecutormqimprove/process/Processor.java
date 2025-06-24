@@ -1,6 +1,7 @@
 package com.executor.xxljobexecutormqimprove.process;
 
 import com.alibaba.fastjson.JSONObject;
+import com.executor.xxljobexecutormqimprove.Enum.TaskEnableEnum;
 import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
 import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
@@ -41,7 +42,8 @@ public class Processor implements MessageListenerConcurrently {
         consumer = new DefaultMQPushConsumer();
         consumer.setNamesrvAddr(rocketMQEntity.getAddress());
         consumer.setConsumerGroup(rocketMQEntity.getConsumerGroup());
-        consumer.unsubscribe(rocketMQEntity.getTopic());
+        consumer.subscribe(rocketMQEntity.getTopic(),"*");
+        consumer.registerMessageListener(this); // 注册监听器
         consumer.start();
         logger.info("----initConsumer----");
     }
@@ -77,6 +79,11 @@ public class Processor implements MessageListenerConcurrently {
         entity.setBizName(dto.getBizName());
         entity.setBizGroup(dto.getBizGroup());
         entity.setScheduledConf(dto.getScheduledConf());
+        if (dto.getTopic().isEmpty()){
+            entity.setTopic("executorPool");
+        }else {
+            entity.setTopic(dto.getTopic());
+        }
         //如果为false则执行一次
         if (dto.getScheduledConf() == null){
             entity.setNextTriggerTime(dto.getExecuteTime());
@@ -88,13 +95,10 @@ public class Processor implements MessageListenerConcurrently {
             }
         }
         entity.setScheduledType(dto.getScheduledType());
-        //1为开启true; 0为关闭 false
-        entity.setEnable(dto.getEnable() != null && dto.getEnable() ? "1" : "0");
-
+        entity.setEnable(dto.getEnable() != null && dto.getEnable() ? TaskEnableEnum.TASK_ENABLE : TaskEnableEnum.TASK_UNABLE);
         String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         entity.setCreateAt(now);
         entity.setUpdateAt(now);
-
         entity.setPayload(dto.getPayload());
 
         return entity;

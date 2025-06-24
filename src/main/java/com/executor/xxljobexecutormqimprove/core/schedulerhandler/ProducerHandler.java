@@ -37,7 +37,10 @@ public class ProducerHandler {
     private CommonTaskService commonTaskService;
     @XxlJob("Executor")
     public void producerMessage(){
-        logger.info("发送消息");
+        logger.info("进入执行逻辑");
+        /**
+         * 加个校验逻辑
+         */
         String param = XxlJobHelper.getJobParam();
         String[] remoteArg = param.split(",");
         String bizName = null;
@@ -66,7 +69,7 @@ public class ProducerHandler {
             commonTaskBaseService.lockTaskById(ids);
             transactionManager.commit(status);
         }catch (Exception e){
-            logger.error("数据库事务添加错误");
+            logger.error("数据库事务添加错误{}",e.getMessage());
             throw e;
         }
 

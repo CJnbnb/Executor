@@ -41,8 +41,9 @@ public class ProducerMessage {
         Message message =  new Message(topic,tag,messageBody.getBytes());
         try {
             SendResult result = producer.send(message);
+            logger.info("result{}",result);
         }catch (Exception e){
-            logger.error("业务MQ发送失败");
+            logger.error("业务MQ发送失败{}",e.getMessage());
             return false;
         }
         return true;
