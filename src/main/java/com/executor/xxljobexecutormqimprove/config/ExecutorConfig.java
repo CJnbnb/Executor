@@ -17,7 +17,7 @@ public class ExecutorConfig {
     @Value("${xxl.job.admin.token}")
     private String accessToken;
 
-    @Value("xxl.job.admin.appname")
+    @Value("${xxl.job.admin.appname}")
     private String appname;
 
     @Value("${xxl.job.executor.address}")
