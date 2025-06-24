@@ -4,7 +4,6 @@ import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
-import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.slf4j.Logger;
@@ -16,7 +15,12 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +40,8 @@ public class ProducerHandler {
 
     @Autowired
     private CommonTaskService commonTaskService;
+
+    private static final ThreadPoolExecutor mqSendPoolExecutor = new ThreadPoolExecutor(Runtime.getRuntime().availableProcessors() * 2, Runtime.getRuntime().availableProcessors() * 2, 0L, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
     @XxlJob("Executor")
     public void producerMessage(){
         /**
@@ -43,16 +49,9 @@ public class ProducerHandler {
          */
         String param = XxlJobHelper.getJobParam();
         String[] remoteArg = param.split(",");
-        remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
-        String bizName = null;
-        String bizGroup = null;
-        if (remoteArg.length == 2){
-            bizName = remoteArg[0];
-            bizGroup = remoteArg[1];
-        }
-
+        String bizName = remoteArg[0];
+        String bizGroup = remoteArg[1];;
         long now = System.currentTimeMillis();
-        long triggerTime = now;
 
         //指定事务位置
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
@@ -64,7 +63,7 @@ public class ProducerHandler {
         List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
         List<String> ids;
         try {
-            produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup,triggerTime,LIMIT_COUNT);
+            produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup, now,LIMIT_COUNT);
             if (produceCommonTaskMessageList.isEmpty()) return ;
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
             commonTaskBaseService.lockTaskById(ids);
@@ -76,13 +75,28 @@ public class ProducerHandler {
         }
 
 
+        /**
+         * 用线程池优化业务执行速度
+         */
+        List<Future<Boolean>> futures = new ArrayList<>();
         //发送业务MQ
         for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-            boolean isSuccess = producerMessage.send(task); // 假设send方法支持参数
-            logger.info("已发送任务: {}", task.getTaskName());
-            if (isSuccess){
-                commonTaskService.changeTaskInfo(task);
-                logger.info("更改任务下次执行时间成功");
+            futures.add(mqSendPoolExecutor.submit(() ->{
+                boolean isSuccess = producerMessage.send(task);
+                logger.info("已发送任务: {}", task.getTaskName());
+                if (isSuccess){
+                    commonTaskService.changeTaskInfo(task);
+                    logger.info("更改任务下次执行时间成功");
+                }
+                return isSuccess;
+            }));
+        }
+        //阻塞等待
+        for (Future<Boolean> future : futures){
+            try{
+                future.get();
+            }catch (Exception e){
+                logger.error("MQ异步任务发送异常{}",e.getMessage());
             }
         }
 
