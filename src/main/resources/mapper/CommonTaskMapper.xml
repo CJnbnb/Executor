@@ -55,7 +55,7 @@
         </foreach>
     </update>
 
-    <update id="BatchUnlockTasks" parameterType="map">
+    <update id="unlockTasks" parameterType="map">
         UPDATE user_scheduled_common_task
         SET process = "done"
         WHERE id IN
@@ -63,13 +63,6 @@
             #{id}
         </foreach>
     </update>
-
-    <update id="unlocksTask" parameterType="map">
-        UPDATE user_scheduled_common_task
-        SET process = "done"
-        WHERE id = #{id}
-    </update>
-
 
     <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO">
         UPDATE user_scheduled_common_task

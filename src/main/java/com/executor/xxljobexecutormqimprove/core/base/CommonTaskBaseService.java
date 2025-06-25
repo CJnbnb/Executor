@@ -4,6 +4,7 @@ import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.mapper.CommonTaskMapper;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -28,12 +29,8 @@ public class CommonTaskBaseService {
     public List<ProduceCommonTaskMessage> lockAndSelectTasksByShard(String bizName,String bizGroup,Long end,Integer limit,Integer shardCount,Integer shardIndex){
         return commonTaskMapper.lockAndSelectTasksByShard(bizName,bizGroup,end,limit,shardCount,shardIndex);
     }
-    public int BatchUnlockTasks(List<String> ids){
-        return commonTaskMapper.BatchUnlockTasks(ids);
-    }
-
-    public int unlockTask(String id){
-        return commonTaskMapper.unlocksTask(id);
+    public int unlockTasks(List<String> ids){
+        return commonTaskMapper.unlockTasks(ids);
     }
 
     public void changeTaskInfo(ChangeTaskInfoDTO changeTaskInfoDTO){

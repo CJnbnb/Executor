@@ -1,15 +1,12 @@
 package com.executor.xxljobexecutormqimprove.core.schedulerhandler;
 
-import com.executor.xxljobexecutormqimprove.bus.api.TaskChangeEvent;
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
 import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
-import com.google.common.eventbus.EventBus;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
-import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,22 +39,20 @@ public class ProducerHandler {
     @Autowired
     private CommonTaskService commonTaskService;
 
-    @Resource
-    private EventBus eventBus;
-
     @XxlJob("Executor")
-    public void producerMessage(String bizName,String bizGroup){
+    public void producerMessage(){
         /**
          * 加个校验逻辑
          */
-//        String param = XxlJobHelper.getJobParam();
-//        String[] remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
+        String param = XxlJobHelper.getJobParam();
+        String[] remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
         // 分片参数
-//        int shardIndex = XxlJobHelper.getShardIndex();
-//        int shardTotal = XxlJobHelper.getShardTotal();
-//        String bizName = remoteArg[0];
-//        String bizGroup = remoteArg[1];
+        int shardIndex = XxlJobHelper.getShardIndex();
+        int shardTotal = XxlJobHelper.getShardTotal();
+        String bizName = remoteArg[0];
+        String bizGroup = remoteArg[1];
         long now = System.currentTimeMillis();
+        logger.info("校验");
 
         //指定事务位置
         DefaultTransactionDefinition def = new DefaultTransactionDefinition();
@@ -69,14 +64,12 @@ public class ProducerHandler {
         List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
         List<String> ids;
         try {
-            //分片参数处理
-//            if (shardIndex == 0 && shardTotal == 1){
-                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup,now,LIMIT_COUNT);
-//                logger.info("单机执行");
-//            }else {
-//                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName,bizGroup, now,LIMIT_COUNT,shardTotal,shardIndex);
-//                logger.info("分片执行");
-//            }
+//            分片参数处理
+            if (shardIndex == -1 || shardTotal == -1){
+                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup, now,LIMIT_COUNT);
+            }else {
+                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName,bizGroup, now,LIMIT_COUNT,shardTotal,shardIndex);
+            }
 
             if (produceCommonTaskMessageList.isEmpty()) return ;
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
@@ -92,36 +85,32 @@ public class ProducerHandler {
         /**
          * 用线程池优化业务执行速度
          */
-        List<ProduceCommonTaskMessage> toChangeTasks = new ArrayList<>();
-        List<Future<ProduceCommonTaskMessage>> futures = new ArrayList<>();
-
-        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+        List<Future<Boolean>> futures = new ArrayList<>();
+        //发送业务MQ
+        try(ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()){
             for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-                futures.add(executor.submit(() -> {
+                futures.add(executor.submit(() ->{
                     boolean isSuccess = producerMessage.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
-                    return isSuccess ? task : null;
+                    if (isSuccess){
+                        commonTaskService.changeTaskInfo(task);
+                        logger.info("更改任务下次执行时间成功");
+                    }
+                    return isSuccess;
                 }));
             }
-            for (Future<ProduceCommonTaskMessage> future : futures) {
-                try {
-                    ProduceCommonTaskMessage result = future.get();
-                    if (result != null) {
-                        toChangeTasks.add(result);
-                    }
-                } catch (Exception e) {
-                    logger.error("MQ异步任务发送异常{}", e.getMessage());
+            //阻塞等待
+            for (Future<Boolean> future : futures){
+                try{
+                    future.get();
+                }catch (Exception e){
+                    logger.error("MQ异步任务发送异常{}",e.getMessage());
                 }
             }
         }
 
-// 2. 批量更改任务状态
-        if (!toChangeTasks.isEmpty()) {
-            commonTaskService.batchChangeTaskInfo(toChangeTasks);
-            logger.info("批量更改任务状态成功");
-        }
-// 3. 批量解锁
-        commonTaskBaseService.BatchUnlockTasks(ids);
+        // 4. 解锁（回写状态）
+        commonTaskBaseService.unlockTasks(ids);
 
     }
 
