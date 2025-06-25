@@ -7,7 +7,6 @@ import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
 import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
-import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +46,9 @@ public class ProducerHandler {
          */
         String param = XxlJobHelper.getJobParam();
         String[] remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
+        // 分片参数
+        int shardIndex = XxlJobHelper.getShardIndex();
+        int shardTotal = XxlJobHelper.getShardTotal();
         String bizName = remoteArg[0];
         String bizGroup = remoteArg[1];
         long now = System.currentTimeMillis();
@@ -62,7 +64,13 @@ public class ProducerHandler {
         List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
         List<String> ids;
         try {
-            produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup, now,LIMIT_COUNT);
+//            分片参数处理
+            if (shardIndex == -1 || shardTotal == -1){
+                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup, now,LIMIT_COUNT);
+            }else {
+                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName,bizGroup, now,LIMIT_COUNT,shardTotal,shardIndex);
+            }
+
             if (produceCommonTaskMessageList.isEmpty()) return ;
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
             commonTaskBaseService.lockTaskById(ids);

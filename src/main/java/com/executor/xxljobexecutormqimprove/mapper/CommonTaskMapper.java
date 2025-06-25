@@ -22,6 +22,15 @@ public interface CommonTaskMapper {
             @Param("limit") Integer limit
     );
 
+    List<ProduceCommonTaskMessage> lockAndSelectTasksByShard(
+            String bizName,
+            String bizGroup,
+            long end,
+            int limit,
+            int shardCount,
+            int shardIndex
+    );
+
     int unlockTasks(@Param("ids") List<String> ids);
 
     void updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
