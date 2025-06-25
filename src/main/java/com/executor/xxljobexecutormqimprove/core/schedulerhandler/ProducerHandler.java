@@ -1,12 +1,15 @@
 package com.executor.xxljobexecutormqimprove.core.schedulerhandler;
 
+import com.executor.xxljobexecutormqimprove.bus.api.TaskChangeEvent;
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
 import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
+import com.google.common.eventbus.EventBus;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +42,9 @@ public class ProducerHandler {
     @Autowired
     private CommonTaskService commonTaskService;
 
+    @Resource
+    private EventBus eventBus;
+
     @XxlJob("Executor")
     public void producerMessage(){
         /**
@@ -64,7 +70,7 @@ public class ProducerHandler {
         List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
         List<String> ids;
         try {
-//            分片参数处理
+            //分片参数处理
             if (shardIndex == -1 || shardTotal == -1){
                 produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup, now,LIMIT_COUNT);
             }else {
@@ -93,6 +99,7 @@ public class ProducerHandler {
                     boolean isSuccess = producerMessage.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
                     if (isSuccess){
+                        logger.info("发布任务进行回调处理");
                         commonTaskService.changeTaskInfo(task);
                         logger.info("更改任务下次执行时间成功");
                     }
@@ -110,7 +117,7 @@ public class ProducerHandler {
         }
 
         // 4. 解锁（回写状态）
-        commonTaskBaseService.unlockTasks(ids);
+        commonTaskBaseService.BatchUnlockTasks(ids);
 
     }
 

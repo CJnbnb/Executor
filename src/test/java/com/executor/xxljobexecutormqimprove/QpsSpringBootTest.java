@@ -20,7 +20,7 @@
 //        int availableProcessors = Math.min(2, Runtime.getRuntime().availableProcessors());
 //        ExecutorService pool = Executors.newFixedThreadPool(availableProcessors); // 限制线程数
 //
-//        int total = 100;
+//        int total = 1000;
 //        AtomicInteger counter = new AtomicInteger(0);
 //
 //        long start = System.currentTimeMillis();
