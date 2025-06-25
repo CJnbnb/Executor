@@ -11,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
 public class CommonTaskServiceImpl implements CommonTaskService{
 
@@ -41,5 +44,32 @@ public class CommonTaskServiceImpl implements CommonTaskService{
         changeTaskInfoDTO.setEnable(enable);
         commonTaskBaseService.changeTaskInfo(changeTaskInfoDTO);
 
+    }
+
+    public void batchChangeTaskInfo(List<ProduceCommonTaskMessage> produceCommonTaskMessageList) {
+        if (produceCommonTaskMessageList == null || produceCommonTaskMessageList.isEmpty()) return;
+        // 转换为DTO列表
+        List<ChangeTaskInfoDTO> dtoList = new ArrayList<>();
+        for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
+            ChangeTaskInfoDTO dto = new ChangeTaskInfoDTO();
+            Long lastTriggerTime = task.getNextTriggerTime();
+            Long nextTriggerTime = null;
+            String enable = TaskEnableEnum.TASK_ENABLE;
+            if (task.getScheduledType().equals(ScheduledTypeEnum.SCHEDULED_CRON)){
+                try {
+                    nextTriggerTime = CronTimeUtil.getNextTriggerTime(task.getScheduledConf(),System.currentTimeMillis());
+                }catch (Exception e){
+                    logger.error("生成时间失败{}",e.getMessage());
+                }
+            }else {
+                enable = TaskEnableEnum.TASK_UNABLE;
+            }
+            dto.setId(task.getId());
+            dto.setLastTriggerTime(task.getNextTriggerTime());
+            dto.setNextTriggerTime(nextTriggerTime);
+            dto.setEnable(enable);
+            dtoList.add(dto);
+        }
+        commonTaskBaseService.batchChangeTaskInfo(dtoList);
     }
 }
