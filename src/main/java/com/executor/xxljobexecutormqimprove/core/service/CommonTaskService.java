@@ -5,7 +5,7 @@ import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import java.util.List;
 
 public interface CommonTaskService {
-     void changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage);
+     boolean changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage);
 
      void batchChangeTaskInfo(List<ProduceCommonTaskMessage> produceCommonTaskMessageList);
 }
