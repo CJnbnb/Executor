@@ -26,6 +26,9 @@ public class CommonTaskBaseService {
         return commonTaskMapper.lockAndSelectTasks(bizName,bizGroup,end,limit);
     }
 
+    public List<ProduceCommonTaskMessage> lockAndSelectTasksByShard(String bizName,String bizGroup,Long end,Integer limit,Integer shardCount,Integer shardIndex){
+        return commonTaskMapper.lockAndSelectTasksByShard(bizName,bizGroup,end,limit,shardCount,shardIndex);
+    }
     public int unlockTasks(List<String> ids){
         return commonTaskMapper.unlockTasks(ids);
     }
