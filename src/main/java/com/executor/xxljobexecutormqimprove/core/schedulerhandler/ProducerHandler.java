@@ -86,6 +86,7 @@ public class ProducerHandler {
          * 用线程池优化业务执行速度
          */
         List<Future<Boolean>> futures = new ArrayList<>();
+        List<String> successId = new ArrayList<>();
         //发送业务MQ
         try(ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()){
             for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
@@ -93,7 +94,10 @@ public class ProducerHandler {
                     boolean isSuccess = producerMessage.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
                     if (isSuccess){
-                        commonTaskService.changeTaskInfo(task);
+                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
+                        if (taskSuccess){
+                            successId.add(task.getId());
+                        }
                         logger.info("更改任务下次执行时间成功");
                     }
                     return isSuccess;
@@ -110,7 +114,7 @@ public class ProducerHandler {
         }
 
         // 4. 解锁（回写状态）
-        commonTaskBaseService.unlockTasks(ids);
+        commonTaskBaseService.unlockTasks(successId);
 
     }
 

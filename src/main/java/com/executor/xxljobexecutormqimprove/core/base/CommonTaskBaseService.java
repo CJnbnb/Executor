@@ -33,8 +33,8 @@ public class CommonTaskBaseService {
         return commonTaskMapper.unlockTasks(ids);
     }
 
-    public void changeTaskInfo(ChangeTaskInfoDTO changeTaskInfoDTO){
-        commonTaskMapper.updateTaskTriggerInfo(changeTaskInfoDTO);
+    public boolean changeTaskInfo(ChangeTaskInfoDTO changeTaskInfoDTO){
+        return commonTaskMapper.updateTaskTriggerInfo(changeTaskInfoDTO);
     }
 
     public void batchChangeTaskInfo(List<ChangeTaskInfoDTO> dtoList) {
