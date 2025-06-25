@@ -79,6 +79,16 @@
         WHERE id = #{id}
     </update>
 
+    <update id="batchUpdateTaskTriggerInfo" parameterType="list">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE user_scheduled_common_task
+            SET last_trigger_time = #{item.lastTriggerTime},
+            next_trigger_time = #{item.nextTriggerTime},
+            enable = #{item.enable}
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
     <!-- CommonTaskMapper.xml -->
     <delete id="deleteDisabledTasks">
         DELETE FROM user_scheduled_common_task WHERE enable = '0'

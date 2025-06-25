@@ -32,5 +32,6 @@ public interface CommonTaskMapper {
     int BatchUnlockTasks(@Param("ids") List<String> ids);
     int unlocksTask(@Param("id") String id);
     void updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
+    void batchUpdateTaskTriggerInfo(@Param("list") List<ChangeTaskInfoDTO> list);
     int deleteDisabledTasks();
 }

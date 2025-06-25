@@ -15,7 +15,7 @@ public class BatchInsertTestData {
                 "(id, task_name, biz_name, biz_group, next_trigger_time, process, enable, payload,scheduled_type,create_at,update_at,topic) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?)";
         PreparedStatement ps = conn.prepareStatement(sql);
-        for (int i = 1; i <= 300000; i++) {
+        for (int i = 3000; i <= 6000; i++) {
             ps.setString(1, "test-4" + i);
             ps.setString(2, "压测任务-" + i); // task_name，保证唯一
             ps.setString(3, "testBiz");

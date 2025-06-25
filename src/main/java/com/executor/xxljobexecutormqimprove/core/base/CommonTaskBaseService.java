@@ -40,6 +40,9 @@ public class CommonTaskBaseService {
         commonTaskMapper.updateTaskTriggerInfo(changeTaskInfoDTO);
     }
 
+    public void batchChangeTaskInfo(List<ChangeTaskInfoDTO> dtoList) {
+        commonTaskMapper.batchUpdateTaskTriggerInfo(dtoList);
+    }
     public int deleteData(){
         return commonTaskMapper.deleteDisabledTasks();
     }
