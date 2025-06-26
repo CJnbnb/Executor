@@ -1,6 +1,7 @@
 package com.executor.xxljobexecutormqimprove.process;
 
 import com.alibaba.fastjson.JSONObject;
+import com.executor.xxljobexecutormqimprove.Enum.ProcessEnum;
 import com.executor.xxljobexecutormqimprove.Enum.TaskEnableEnum;
 import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
@@ -99,7 +100,8 @@ public class Processor implements MessageListenerConcurrently {
         entity.setCreateAt(LocalDateTime.now());
         entity.setUpdateAt(LocalDateTime.now());
         entity.setPayload(dto.getPayload());
-
+        entity.setProcess(ProcessEnum.INIT);
+        entity.setTaskId(dto.getTaskId());
         return entity;
     }
 

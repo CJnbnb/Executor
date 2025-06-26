@@ -6,6 +6,7 @@ import java.io.Serializable;
 
 @Data
 public class ProcessCommonTaskDTO implements Serializable{
+    private String taskId;
     private String taskName;
     private String bizName;
     private String bizGroup;
