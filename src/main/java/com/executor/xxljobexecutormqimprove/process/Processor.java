@@ -96,9 +96,8 @@ public class Processor implements MessageListenerConcurrently {
         }
         entity.setScheduledType(dto.getScheduledType());
         entity.setEnable(dto.getEnable() != null && dto.getEnable() ? TaskEnableEnum.TASK_ENABLE : TaskEnableEnum.TASK_UNABLE);
-        String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        entity.setCreateAt(now);
-        entity.setUpdateAt(now);
+        entity.setCreateAt(LocalDateTime.now());
+        entity.setUpdateAt(LocalDateTime.now());
         entity.setPayload(dto.getPayload());
 
         return entity;

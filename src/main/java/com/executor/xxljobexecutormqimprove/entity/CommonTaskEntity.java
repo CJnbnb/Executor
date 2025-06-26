@@ -2,6 +2,8 @@ package com.executor.xxljobexecutormqimprove.entity;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class CommonTaskEntity {
     private String id;
@@ -11,8 +13,8 @@ public class CommonTaskEntity {
     private Long nextTriggerTime;
     private Long lastTriggerTime;
     private String scheduledConf;
-    private String createAt;
-    private String updateAt;
+    private LocalDateTime createAt;
+    private LocalDateTime updateAt;
     private String scheduledType;
     private String enable;
     private String payload;

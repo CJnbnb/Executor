@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.executor.xxljobexecutormqimprove.mapper.RetryTaskMapper">
+
+
+    <insert id="insertRetryTask" parameterType="com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity">
+        INSERT INTO retry_task (id,next_trigger_time,retry_count,args,create_at)
+        VALUES (#{id},#{nextTriggerTime},#{retryCount},#{args},#{createAt})
+    </insert>
+
+    <update id="updateRecord" parameterType="com.executor.xxljobexecutormqimprove.entity.RetryTaskUpdateDTO">
+        UPDATE retry_task
+        SET
+            next_trigger_time = #{nextTriggerTime},
+            retry_count = #{retryCount}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteRetryTask" parameterType="java.lang.String">
+        DELETE FROM retry_task
+        WHERE id = #{id}
+    </delete>
+
+
+    <select id="findRetryableTasks" resultType="com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity">
+        SELECT id,
+        next_trigger_time,
+        retry_count,
+        args,
+        create_at
+        FROM retry_task
+        WHERE retry_count &lt; 10
+        AND next_trigger_time &lt; #{currentTime}
+        ORDER BY next_trigger_time ASC
+        LIMIT 30
+    </select>
+
+
+</mapper>

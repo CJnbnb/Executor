@@ -1,6 +1,7 @@
 package com.executor.xxljobexecutormqimprove.producer;
 
-import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.core.base.RetryTaskBaseService;
+import com.executor.xxljobexecutormqimprove.core.service.RetryTaskService;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
 import jakarta.annotation.PreDestroy;
@@ -11,6 +12,9 @@ import org.apache.rocketmq.common.message.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -23,6 +27,9 @@ import javax.annotation.PostConstruct;
 public class ProducerMessage {
     @Autowired
     private RocketMQEntity rocketMQEntity;
+
+    @Autowired
+    private RetryTaskService retryTaskService;
     private final Logger logger = LoggerFactory.getLogger(ProducerMessage.class);
 
     private DefaultMQProducer producer;
@@ -34,6 +41,11 @@ public class ProducerMessage {
         logger.info("---- RocketMQ Producer started ----");
     }
 
+    @Retryable(
+            value = {Exception.class},
+            maxAttempts = 2,
+            backoff = @Backoff(delay = 2000,multiplier = 2)
+    )
     public boolean send(ProduceCommonTaskMessage produceCommonTaskMessage){
         String topic = produceCommonTaskMessage.getTopic();
         String tag = produceCommonTaskMessage.getTaskName();
@@ -44,11 +56,18 @@ public class ProducerMessage {
             SendResult result = producer.send(message);
             logger.info("result{}",result);
         }catch (Exception e){
-            logger.error("业务MQ发送失败{}",e.getMessage());
-            return false;
+            logger.error("业务MQ发送失败{},即将写入重试队列",e.getMessage());
+            throw new RuntimeException(e);
         }
         return true;
     }
+
+    @Recover
+    public void recover(Exception e, ProduceCommonTaskMessage task) {
+        logger.error("所有重试失败，任务发送最终失败: {}", task.getTaskName(), e);
+        retryTaskService.recordTaskByTask(task);
+    }
+
 
 
     @PreDestroy
