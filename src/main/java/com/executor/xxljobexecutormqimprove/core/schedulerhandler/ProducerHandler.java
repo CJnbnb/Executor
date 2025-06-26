@@ -41,82 +41,85 @@ public class ProducerHandler {
 
     private static final ExecutorService executors = Executors.newVirtualThreadPerTaskExecutor();
 
+    //TODO 存在BUG一次好像只拉取200条，有问题
     @XxlJob("Executor")
     public void producerMessage() {
-        /**
-         * 加个校验逻辑
-         */
-        String param = XxlJobHelper.getJobParam();
-        String[] remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
-        // 分片参数
-        int shardIndex = XxlJobHelper.getShardIndex();
-        int shardTotal = XxlJobHelper.getShardTotal();
-        String bizName = remoteArg[0];
-        String bizGroup = remoteArg[1];
-        long now = System.currentTimeMillis();
-        logger.info("校验");
+        long windowEnd = System.currentTimeMillis() + 1000;
+        while (true) {
+            /**
+             * 加个校验逻辑
+             */
+            String param = XxlJobHelper.getJobParam();
+            String[] remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
+            // 分片参数
+            int shardIndex = XxlJobHelper.getShardIndex();
+            int shardTotal = XxlJobHelper.getShardTotal();
+            String bizName = remoteArg[0];
+            String bizGroup = remoteArg[1];
+            logger.info("校验");
 
-        //指定事务位置
-        DefaultTransactionDefinition def = new DefaultTransactionDefinition();
-        def.setName("lockData");
-        def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
-        TransactionStatus status = transactionManager.getTransaction(def);
+            //指定事务位置
+            DefaultTransactionDefinition def = new DefaultTransactionDefinition();
+            def.setName("lockData");
+            def.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
+            TransactionStatus status = transactionManager.getTransaction(def);
 
-        //短事务提交
-        List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
-        List<String> ids;
-        try {
-//            分片参数处理
-            if (shardIndex == -1 || shardTotal == -1) {
-                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName, bizGroup, now, LIMIT_COUNT);
-            } else {
-                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName, bizGroup, now, LIMIT_COUNT, shardTotal, shardIndex);
-            }
-
-            if (produceCommonTaskMessageList.isEmpty()) return;
-            ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
-            commonTaskBaseService.lockTaskById(ids);
-            transactionManager.commit(status);
-            logger.info("锁定事务成功");
-        } catch (Exception e) {
-            logger.error("数据库事务添加错误{}", e.getMessage());
-            throw e;
-        }
-
-
-        /**
-         * 用线程池优化业务执行速度
-         */
-        List<Future<Boolean>> futures = new ArrayList<>();
-        //保证线程安全
-        List<String> successId = new CopyOnWriteArrayList<>();
-        //发送业务MQ
-        for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-            futures.add(executors.submit(() -> {
-                boolean isSuccess = producerMessage.send(task);
-                logger.info("已发送任务: {}", task.getTaskName());
-                if (isSuccess) {
-                    boolean taskSuccess = commonTaskService.changeTaskInfo(task);
-                    if (taskSuccess) {
-                        successId.add(task.getId());
-                    }
-                    logger.info("更改任务下次执行时间成功");
-                }
-                return isSuccess;
-            }));
-        }
-        //阻塞等待
-        for (Future<Boolean> future : futures) {
+            //短事务提交
+            List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
+            List<String> ids;
             try {
-                future.get();
+//            分片参数处理
+                if (shardIndex == -1 || shardTotal == -1) {
+                    produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName, bizGroup, windowEnd, LIMIT_COUNT);
+                } else {
+                    produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName, bizGroup, windowEnd, LIMIT_COUNT, shardTotal, shardIndex);
+                }
+
+                if (produceCommonTaskMessageList.isEmpty()) break;
+                ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
+                commonTaskBaseService.lockTaskById(ids);
+                transactionManager.commit(status);
+                logger.info("锁定事务成功");
             } catch (Exception e) {
-                logger.error("MQ异步任务发送异常{}", e.getMessage());
+                logger.error("数据库事务添加错误{}", e.getMessage());
+                throw e;
             }
+
+
+            /**
+             * 用线程池优化业务执行速度
+             */
+            List<Future<Boolean>> futures = new ArrayList<>();
+            //保证线程安全
+            List<String> successId = new CopyOnWriteArrayList<>();
+            //发送业务MQ
+            for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
+                futures.add(executors.submit(() -> {
+                    boolean isSuccess = producerMessage.send(task);
+                    logger.info("已发送任务: {}", task.getTaskName());
+                    if (isSuccess) {
+                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
+                        if (taskSuccess) {
+                            successId.add(task.getId());
+                        }
+                        logger.info("更改任务下次执行时间成功");
+                    }
+                    return isSuccess;
+                }));
+            }
+            //阻塞等待
+            for (Future<Boolean> future : futures) {
+                try {
+                    future.get();
+                } catch (Exception e) {
+                    logger.error("MQ异步任务发送异常{}", e.getMessage());
+                }
+            }
+
+            // 4. 解锁（回写状态）
+            commonTaskBaseService.unlockTasks(successId);
+
         }
-
-        // 4. 解锁（回写状态）
-        commonTaskBaseService.unlockTasks(successId);
-
     }
 
 
