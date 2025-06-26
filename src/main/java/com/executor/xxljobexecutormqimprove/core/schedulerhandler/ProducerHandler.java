@@ -39,8 +39,10 @@ public class ProducerHandler {
     @Autowired
     private CommonTaskService commonTaskService;
 
+    private static final ExecutorService executors = Executors.newVirtualThreadPerTaskExecutor();
+
     @XxlJob("Executor")
-    public void producerMessage(){
+    public void producerMessage() {
         /**
          * 加个校验逻辑
          */
@@ -65,19 +67,19 @@ public class ProducerHandler {
         List<String> ids;
         try {
 //            分片参数处理
-            if (shardIndex == -1 || shardTotal == -1){
-                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName,bizGroup, now,LIMIT_COUNT);
-            }else {
-                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName,bizGroup, now,LIMIT_COUNT,shardTotal,shardIndex);
+            if (shardIndex == -1 || shardTotal == -1) {
+                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName, bizGroup, now, LIMIT_COUNT);
+            } else {
+                produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName, bizGroup, now, LIMIT_COUNT, shardTotal, shardIndex);
             }
 
-            if (produceCommonTaskMessageList.isEmpty()) return ;
+            if (produceCommonTaskMessageList.isEmpty()) return;
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
             commonTaskBaseService.lockTaskById(ids);
             transactionManager.commit(status);
             logger.info("锁定事务成功");
-        }catch (Exception e){
-            logger.error("数据库事务添加错误{}",e.getMessage());
+        } catch (Exception e) {
+            logger.error("数据库事务添加错误{}", e.getMessage());
             throw e;
         }
 
@@ -86,30 +88,29 @@ public class ProducerHandler {
          * 用线程池优化业务执行速度
          */
         List<Future<Boolean>> futures = new ArrayList<>();
-        List<String> successId = new ArrayList<>();
+        //保证线程安全
+        List<String> successId = new CopyOnWriteArrayList<>();
         //发送业务MQ
-        try(ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()){
-            for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-                futures.add(executor.submit(() ->{
-                    boolean isSuccess = producerMessage.send(task);
-                    logger.info("已发送任务: {}", task.getTaskName());
-                    if (isSuccess){
-                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
-                        if (taskSuccess){
-                            successId.add(task.getId());
-                        }
-                        logger.info("更改任务下次执行时间成功");
+        for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
+            futures.add(executors.submit(() -> {
+                boolean isSuccess = producerMessage.send(task);
+                logger.info("已发送任务: {}", task.getTaskName());
+                if (isSuccess) {
+                    boolean taskSuccess = commonTaskService.changeTaskInfo(task);
+                    if (taskSuccess) {
+                        successId.add(task.getId());
                     }
-                    return isSuccess;
-                }));
-            }
-            //阻塞等待
-            for (Future<Boolean> future : futures){
-                try{
-                    future.get();
-                }catch (Exception e){
-                    logger.error("MQ异步任务发送异常{}",e.getMessage());
+                    logger.info("更改任务下次执行时间成功");
                 }
+                return isSuccess;
+            }));
+        }
+        //阻塞等待
+        for (Future<Boolean> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                logger.error("MQ异步任务发送异常{}", e.getMessage());
             }
         }
 
@@ -117,7 +118,6 @@ public class ProducerHandler {
         commonTaskBaseService.unlockTasks(successId);
 
     }
-
 
 
 }
