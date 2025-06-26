@@ -16,5 +16,6 @@ public class ProcessCommonTaskDTO implements Serializable{
     private Boolean enable;
     private String payload;
     private String topic;
+    private Boolean isRealTime;
 }
 

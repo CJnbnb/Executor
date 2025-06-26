@@ -7,6 +7,7 @@ import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
 import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
+import com.executor.xxljobexecutormqimprove.core.base.RealtimeTaskBaseService;
 import com.executor.xxljobexecutormqimprove.util.CronTimeUtil;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -35,6 +36,9 @@ public class Processor implements MessageListenerConcurrently {
 
     @Autowired
     private CommonTaskBaseService commonTaskBaseService;
+
+    @Autowired
+    private RealtimeTaskBaseService realtimeTaskBaseService;
 
     private DefaultMQPushConsumer consumer;
 
@@ -68,8 +72,11 @@ public class Processor implements MessageListenerConcurrently {
         // 补充本地生成字段
         CommonTaskEntity entity = transFormat(taskDTO);
         logger.info("转为任务实体: {}", entity);
-        commonTaskBaseService.upsetTask(entity);
-
+        if (taskDTO.getIsRealTime() != null && taskDTO.getIsRealTime()) {
+            realtimeTaskBaseService.upsetTask(entity);
+        } else {
+            commonTaskBaseService.upsetTask(entity);
+        }
     }
 
     private CommonTaskEntity transFormat(ProcessCommonTaskDTO dto) {
