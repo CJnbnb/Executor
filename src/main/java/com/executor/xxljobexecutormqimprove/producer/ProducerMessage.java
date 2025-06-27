@@ -51,12 +51,13 @@ public class ProducerMessage {
         String tag = produceCommonTaskMessage.getTaskName();
         String messageBody = produceCommonTaskMessage.getPayload();
         Message message =  new Message(topic,tag,messageBody.getBytes());
+        SendResult sendResult = new SendResult();
         try {
-            logger.info(String.valueOf(message));
-            SendResult result = producer.send(message);
-            logger.info("result{}",result);
+             logger.info(String.valueOf(message));
+             sendResult = producer.send(message);
+            logger.info("result{}",sendResult);
         }catch (Exception e){
-            logger.error("业务MQ发送失败{},即将写入重试队列",e.getMessage());
+            logger.error("业务MQ发送失败,失败消息为{}，id为{}",e.getMessage(),sendResult.getMsgId());
             throw new RuntimeException(e);
         }
         return true;
