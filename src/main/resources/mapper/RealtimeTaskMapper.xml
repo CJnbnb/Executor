@@ -5,22 +5,53 @@
 
 <mapper namespace="com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper">
 
-    <insert id="upsetTskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
-        insert into user_scheduled_realtime_task (id, task_id, task_name, biz_name, biz_group, next_trigger_time, last_trigger_time, scheduled_conf,
-                                                create_at, update_at, scheduled_type, enable, payload, topic, process)
-        VALUES (#{id}, #{taskId}, #{taskName}, #{bizName}, #{bizGroup}, #{nextTriggerTime}, #{lastTriggerTime}, #{scheduledConf}, #{createAt},
-                #{updateAt}, #{scheduledType}, #{enable},#{payload},#{topic},#{process}) ON DUPLICATE KEY
-        UPDATE
-            next_trigger_time = VALUES (next_trigger_time),
-            last_trigger_time = VALUES (last_trigger_time),
-            scheduled_conf = VALUES (scheduled_conf),
-            update_at = VALUES (update_at),
-            scheduled_type = VALUES (scheduled_type),
-            enable = VALUES (enable),
-            payload = VALUES (payload),
-            topic = VALUES (topic),
-            process = VALUES (process)
+    <!-- 插入或更新任务 -->
+    <insert id="upsetTaskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity">
+        INSERT INTO user_scheduled_realtime_task (
+            id, task_id, task_name, biz_name, biz_group, next_trigger_time, last_trigger_time, scheduled_conf,
+            create_at, update_at, scheduled_type, enable, payload, topic, process
+        ) VALUES (
+            #{id}, #{taskId}, #{taskName}, #{bizName}, #{bizGroup}, #{nextTriggerTime}, #{lastTriggerTime}, #{scheduledConf},
+            #{createAt}, #{updateAt}, #{scheduledType}, #{enable}, #{payload}, #{topic}, #{process}
+        )
+        ON DUPLICATE KEY UPDATE
+            next_trigger_time = VALUES(next_trigger_time),
+            last_trigger_time = VALUES(last_trigger_time),
+            scheduled_conf = VALUES(scheduled_conf),
+            update_at = VALUES(update_at),
+            scheduled_type = VALUES(scheduled_type),
+            enable = VALUES(enable),
+            payload = VALUES(payload),
+            topic = VALUES(topic),
+            process = VALUES(process)
     </insert>
+
+
+    <!-- 更新任务触发信息 -->
+    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity">
+        UPDATE user_scheduled_realtime_task
+        SET last_trigger_time = #{lastTriggerTime},
+            next_trigger_time = #{nextTriggerTime},
+            enable = #{enable},
+            update_at = #{updateAt}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 查询所有可调度任务（时间轮预读用） -->
+    <select id="selectSchedulableTasks" resultType="com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity">
+        SELECT * FROM user_scheduled_realtime_task
+        WHERE next_trigger_time &lt; #{end}
+          AND (process IS NULL OR process != 'processing')
+          AND enable = '1'
+        ORDER BY next_trigger_time ASC
+        LIMIT #{limit}
+    </select>
+    <select id="loadById" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+        SELECT * FROM user_scheduled_realtime_task
+        WHERE id = #{id}
+    </select>
+
+
 
     <!-- 其他SQL可参考CommonTaskMapper.xml按需添加 -->
 

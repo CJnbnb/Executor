@@ -1,6 +1,8 @@
 package com.executor.xxljobexecutormqimprove.core.base;
 
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity;
 import com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -11,8 +13,13 @@ import java.util.List;
 public class RealtimeTaskBaseService {
     @Autowired
     private RealtimeTaskMapper realtimeTaskMapper;
-    public boolean upsetTask(CommonTaskEntity commonTaskEntity){
-        return realtimeTaskMapper.upsetTskInfo(commonTaskEntity);
+    public boolean upsetTask(RealTimeTaskEntity realTimeTask){
+        return realtimeTaskMapper.upsetTaskInfo(realTimeTask);
     }
-    // 其他方法可参考CommonTaskBaseService按需添加
-} 
+
+    public ProduceCommonTaskMessage loadById(String id){
+        return realtimeTaskMapper.loadById(id);
+    }
+
+
+}

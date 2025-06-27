@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class CommonTaskEntity {
+public class RealTimeTaskEntity {
     private String id;
     private String taskId;
     private String taskName;
@@ -21,5 +21,4 @@ public class CommonTaskEntity {
     private String payload;
     private String topic;
     private String process;
-    private Long lockedAt;
 }

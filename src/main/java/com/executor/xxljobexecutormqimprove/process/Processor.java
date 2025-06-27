@@ -5,9 +5,11 @@ import com.executor.xxljobexecutormqimprove.Enum.ProcessEnum;
 import com.executor.xxljobexecutormqimprove.Enum.TaskEnableEnum;
 import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity;
 import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.base.RealtimeTaskBaseService;
+import com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper;
 import com.executor.xxljobexecutormqimprove.util.CronTimeUtil;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -70,13 +72,46 @@ public class Processor implements MessageListenerConcurrently {
 
     private void process(ProcessCommonTaskDTO taskDTO) {
         // 补充本地生成字段
-        CommonTaskEntity entity = transFormat(taskDTO);
-        logger.info("转为任务实体: {}", entity);
         if (taskDTO.getIsRealTime() != null && taskDTO.getIsRealTime()) {
+            RealTimeTaskEntity entity = transFormatReal(taskDTO);
             realtimeTaskBaseService.upsetTask(entity);
         } else {
+            CommonTaskEntity entity = transFormat(taskDTO);
             commonTaskBaseService.upsetTask(entity);
         }
+    }
+
+    private RealTimeTaskEntity transFormatReal(ProcessCommonTaskDTO dto) {
+        RealTimeTaskEntity entity = new RealTimeTaskEntity();
+
+        entity.setId(System.currentTimeMillis() + "-" + ThreadLocalRandom.current().nextInt(1000, 9999));
+        entity.setTaskName(dto.getTaskName());
+        entity.setBizName(dto.getBizName());
+        entity.setBizGroup(dto.getBizGroup());
+        entity.setScheduledConf(dto.getScheduledConf());
+        if (dto.getTopic().isEmpty()){
+            entity.setTopic("executorPool");
+        }else {
+            entity.setTopic(dto.getTopic());
+        }
+        //如果为false则执行一次
+        if (dto.getScheduledConf() == null){
+            entity.setNextTriggerTime(dto.getExecuteTime());
+        }else{
+            try {
+                entity.setNextTriggerTime(CronTimeUtil.getNextTriggerTime(dto.getScheduledConf(),System.currentTimeMillis()));
+            }catch (Exception e){
+                logger.error("时间戳生成失败，内部错误");
+            }
+        }
+        entity.setScheduledType(dto.getScheduledType());
+        entity.setEnable(dto.getEnable() != null && dto.getEnable() ? TaskEnableEnum.TASK_ENABLE : TaskEnableEnum.TASK_UNABLE);
+        entity.setCreateAt(LocalDateTime.now());
+        entity.setUpdateAt(LocalDateTime.now());
+        entity.setPayload(dto.getPayload());
+        entity.setProcess(ProcessEnum.INIT);
+        entity.setTaskId(dto.getTaskId());
+        return entity;
     }
 
     private CommonTaskEntity transFormat(ProcessCommonTaskDTO dto) {
