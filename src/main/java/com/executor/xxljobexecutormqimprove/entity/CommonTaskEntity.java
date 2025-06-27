@@ -19,4 +19,5 @@ public class CommonTaskEntity {
     private String enable;
     private String payload;
     private String topic;
+    private Long locked_at;
 }
