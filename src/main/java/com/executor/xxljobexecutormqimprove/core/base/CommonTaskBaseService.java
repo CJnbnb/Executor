@@ -40,6 +40,14 @@ public class CommonTaskBaseService {
     public void batchChangeTaskInfo(List<ChangeTaskInfoDTO> dtoList) {
         commonTaskMapper.batchUpdateTaskTriggerInfo(dtoList);
     }
+
+    public List<String> findTimeoutProcessingTaskIds(Long timeNow){
+        return commonTaskMapper.selectTimeoutProcessingTaskIDs(timeNow);
+    }
+
+    public int unlockExceptionTasks(List<String> ids){
+        return commonTaskMapper.unlockExceptionTasks(ids);
+    }
     public int deleteData(){
         return commonTaskMapper.deleteDisabledTasks();
     }

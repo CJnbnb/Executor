@@ -7,14 +7,18 @@ import com.executor.xxljobexecutormqimprove.entity.RetryTaskUpdateDTO;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
 import com.executor.xxljobexecutormqimprove.util.CalculateRetryTaskUtil;
 import com.google.gson.Gson;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Service
 public class RetryTaskService {
+    private Logger logger = LoggerFactory.getLogger(RetryTaskService.class);
     @Autowired
     private RetryTaskBaseService retryTaskBaseService;
 
@@ -37,6 +41,9 @@ public class RetryTaskService {
     public void retry(){
         Long now = System.currentTimeMillis();
         List<RetryTaskEntity> retryTaskEntities = retryTaskBaseService.getRetryableTask(now);
+        if (retryTaskEntities.isEmpty()){
+            return;
+        }
         for (RetryTaskEntity retryTaskEntity : retryTaskEntities){
             try {
                 boolean isSuccess = producerMessage.send(gson.fromJson(retryTaskEntity.getArgs(), ProduceCommonTaskMessage.class));

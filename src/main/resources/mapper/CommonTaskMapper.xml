@@ -82,6 +82,23 @@
         </foreach>
     </update>
 
+    <update id="unlockExceptionTasks">
+        UPDATE user_scheduled_common_task
+        SET process = "ExceptionUnlock", locked_at = NULL
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="selectTimeoutProcessingTaskIDs" resultType="java.lang.String">
+        SELECT id FROM user_scheduled_common_task
+        WHERE process = 'processing'
+        AND locked_at &lt; (#{now} - 300000)  <!-- now是毫秒时间戳，减去5分钟（300000ms） -->
+    </select>
+
+
+
     <!-- CommonTaskMapper.xml -->
     <delete id="deleteDisabledTasks">
         DELETE FROM user_scheduled_common_task WHERE enable = '0'
