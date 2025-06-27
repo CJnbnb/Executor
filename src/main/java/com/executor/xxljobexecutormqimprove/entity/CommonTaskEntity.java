@@ -20,9 +20,6 @@ public class CommonTaskEntity {
     private String enable;
     private String payload;
     private String topic;
-<<<<<<< HEAD
     private String process;
-=======
     private Long locked_at;
->>>>>>> dev
 }
