@@ -20,25 +20,27 @@ public class ScheduledUnlockService {
     private CommonTaskBaseService commonTaskBaseService;
 
     @PostConstruct
-    private void start(){
-        while (!toStop) {
-            try {
-                // 1. 查询超时未解锁的任务
-                List<String> timeoutIds = commonTaskBaseService.findTimeoutProcessingTaskIds(System.currentTimeMillis());
-                if (!timeoutIds.isEmpty()) {
-                    // 2. 批量解锁
-                    commonTaskBaseService.unlockExceptionTasks(timeoutIds);
+    public void start() {
+        Thread t = new Thread(() -> {
+            while (!toStop) {
+                try {
+                    // 1. 查询超时未解锁的任务
+                    List<String> timeoutIds = commonTaskBaseService.findTimeoutProcessingTaskIds(System.currentTimeMillis());
+                    if (!timeoutIds.isEmpty()) {
+                        // 2. 批量解锁
+                        commonTaskBaseService.unlockExceptionTasks(timeoutIds);
+                        logger.info("补偿时间为{}", System.currentTimeMillis());
+                    }
+                    Thread.sleep(60_000 * 10);
+                } catch (Exception e) {
+                    logger.error("补偿任务失败{}", e.getMessage());
                 }
-                logger.info("补偿时间为{}",System.currentTimeMillis());
-                Thread.sleep(60_000 * 10);
-            } catch (Exception e) {
-                logger.error("补偿任务失败{}",e.getMessage());
             }
-        }
+        });
     }
 
     @PreDestroy
-    private void stop(){
+    private void stop() {
         toStop = true;
     }
 

@@ -1,4 +1,6 @@
 package com.executor.xxljobexecutormqimprove.core.thread;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ public class JobTriggerPoolHelper {
     private ThreadPoolExecutor fastTriggerPool = null;
     private ThreadPoolExecutor slowTriggerPool = null;
 
+    @PostConstruct
     public void start(){
         fastTriggerPool = new ThreadPoolExecutor(
                 10,
@@ -66,6 +69,7 @@ public class JobTriggerPoolHelper {
     }
 
 
+    @PreDestroy
     public void stop() {
         //triggerPool.shutdown();
         fastTriggerPool.shutdownNow();
@@ -133,20 +137,8 @@ public class JobTriggerPoolHelper {
 
 
 
-    // ---------------------- helper ----------------------
-
-    private static JobTriggerPoolHelper helper = new JobTriggerPoolHelper();
-
-    public static void toStart() {
-        helper.start();
-    }
-    public static void toStop() {
-        helper.stop();
-    }
-
-
     public void trigger(String jobId) {
-        helper.addTrigger(jobId);
+        addTrigger(jobId);
     }
 
 }

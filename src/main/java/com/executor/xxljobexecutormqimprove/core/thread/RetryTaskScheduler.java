@@ -23,7 +23,7 @@ public class RetryTaskScheduler {
             Executors.newSingleThreadScheduledExecutor();
 
     @PostConstruct
-    public void start() {
+    private void start() {
         logger.info("------init RetryTaskScheduler-------");
         executor.scheduleWithFixedDelay(
                 () -> retryTaskService.retry(),

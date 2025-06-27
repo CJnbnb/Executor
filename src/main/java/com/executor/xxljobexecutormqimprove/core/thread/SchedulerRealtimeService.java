@@ -5,6 +5,8 @@ import com.executor.xxljobexecutormqimprove.Enum.TriggerEnum;
 import com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity;
 import com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper;
 import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
@@ -42,6 +44,7 @@ public class SchedulerRealtimeService {
     //时间轮
     private volatile static Map<Integer, List<String>> ringData = new ConcurrentHashMap<>();
 
+    @PostConstruct
     public void start(){
         scheduleThread = new Thread(new Runnable() {
             @Override
@@ -283,6 +286,7 @@ public class SchedulerRealtimeService {
         logger.debug(">>>>>>>>>>> xxl-job, schedule push time-ring : " + ringSecond + " = " + Arrays.asList(ringItemData) );
     }
 
+    @PreDestroy
     public void toStop(){
 
         // 1、stop schedule

@@ -15,7 +15,7 @@ public class ScheduledClearService {
 
     // 每天凌晨2点清理一次
     @Scheduled(cron = "0 0 2 * * ?", zone = "Asia/Shanghai")
-    public void clearDisabledTasks() {
+    private void clearDisabledTasks() {
         int deleted = commonTaskBaseService.deleteData();
         logger.info("定时清理无效任务，删除数量：" + deleted);
     }

@@ -56,7 +56,6 @@ public class ProducerHandler {
             int shardTotal = XxlJobHelper.getShardTotal();
             String bizName = remoteArg[0];
             String bizGroup = remoteArg[1];
-            logger.info("校验");
 
             //指定事务位置
             DefaultTransactionDefinition def = new DefaultTransactionDefinition();
