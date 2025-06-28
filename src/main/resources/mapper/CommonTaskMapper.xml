@@ -48,7 +48,8 @@
 
     <update id="lockTaskById">
         UPDATE user_scheduled_common_task
-        SET process = 'processing'
+        SET process = 'processing',
+        locked_at = UNIX_TIMESTAMP(NOW()) * 1000  -- 毫秒级
         WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
@@ -57,7 +58,8 @@
 
     <update id="unlockTasks" parameterType="map">
         UPDATE user_scheduled_common_task
-        SET process = "done"
+        SET process = "done",
+            locked_at = NULL
         WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
@@ -96,7 +98,6 @@
         WHERE process = 'processing'
         AND locked_at &lt; (#{now} - 300000)  <!-- now是毫秒时间戳，减去5分钟（300000ms） -->
     </select>
-
 
 
     <!-- CommonTaskMapper.xml -->

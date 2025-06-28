@@ -31,12 +31,14 @@ public class ScheduledUnlockService {
                         commonTaskBaseService.unlockExceptionTasks(timeoutIds);
                         logger.info("补偿时间为{}", System.currentTimeMillis());
                     }
-                    Thread.sleep(60_000 * 10);
                 } catch (Exception e) {
-                    logger.error("补偿任务失败{}", e.getMessage());
+                    logger.error("补偿任务失败{}", e);
                 }
             }
         });
+        t.setDaemon(true);
+        t.setName("unlockTimoutTask");
+        t.start();
     }
 
     @PreDestroy

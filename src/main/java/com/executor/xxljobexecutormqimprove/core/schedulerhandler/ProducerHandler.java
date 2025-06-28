@@ -67,20 +67,28 @@ public class ProducerHandler {
             List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
             List<String> ids;
             try {
+//                走XxlJob的分片规则
 //            分片参数处理
-                if (shardIndex == -1 || shardTotal == -1) {
+                if (shardIndex == 0 || shardTotal == 1) {
                     produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName, bizGroup, windowEnd, LIMIT_COUNT);
                 } else {
                     produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName, bizGroup, windowEnd, LIMIT_COUNT, shardTotal, shardIndex);
                 }
 
-                if (produceCommonTaskMessageList.isEmpty()) break;
+                if (produceCommonTaskMessageList.isEmpty()) {
+                    // 没有数据时也要提交事务，释放锁
+                    transactionManager.commit(status);
+                    logger.info("没有可处理的任务，事务已提交");
+                    break;
+                }
+                
                 ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
                 commonTaskBaseService.lockTaskById(ids);
                 transactionManager.commit(status);
                 logger.info("锁定事务成功");
             } catch (Exception e) {
                 logger.error("数据库事务添加错误{}", e.getMessage());
+                transactionManager.rollback(status);
                 throw e;
             }
 
