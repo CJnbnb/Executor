@@ -1,5 +1,6 @@
 package com.executor.xxljobexecutormqimprove.core.thread;
 
+import com.executor.xxljobexecutormqimprove.Enum.ScheduledTypeEnum;
 import com.executor.xxljobexecutormqimprove.Enum.TaskEnableEnum;
 import com.executor.xxljobexecutormqimprove.Enum.TriggerEnum;
 import com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity;
@@ -258,15 +259,17 @@ public class SchedulerRealtimeService {
 
     private void refreshNextValidTime(RealTimeTaskEntity realTimeTask, Long fromTime) {
         try {
-            Long nextValidTime = getNextTriggerTime(realTimeTask.getScheduledConf(), fromTime);
-            if (nextValidTime != TriggerEnum.NULL_NEXT_TRIGGER_TIME) {
-                realTimeTask.setLastTriggerTime(realTimeTask.getNextTriggerTime());
-                realTimeTask.setNextTriggerTime(nextValidTime);
-            } else {
+            if (realTimeTask.getScheduledType().equals(ScheduledTypeEnum.SCHEDULED_ONCE)){
                 // generateNextValidTime fail, stop job
                 realTimeTask.setEnable(TaskEnableEnum.TASK_UNABLE);
                 realTimeTask.setLastTriggerTime(realTimeTask.getNextTriggerTime());
                 realTimeTask.setNextTriggerTime(TriggerEnum.NULL_NEXT_TRIGGER_TIME);
+            }else {
+                Long nextValidTime = getNextTriggerTime(realTimeTask.getScheduledConf(), fromTime);
+                if (nextValidTime != TriggerEnum.NULL_NEXT_TRIGGER_TIME) {
+                    realTimeTask.setLastTriggerTime(realTimeTask.getNextTriggerTime());
+                    realTimeTask.setNextTriggerTime(nextValidTime);
+                }
             }
         } catch (Throwable e) {
             logger.error("错位{}",e);

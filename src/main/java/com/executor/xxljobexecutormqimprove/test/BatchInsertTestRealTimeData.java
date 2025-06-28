@@ -1,17 +1,16 @@
 package com.executor.xxljobexecutormqimprove.test;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 
-public class BatchInsertTestData {
+public class BatchInsertTestRealTimeData {
     public static void main(String[] args) throws Exception {
         Connection conn = DriverManager.getConnection(
                 "jdbc:mysql://localhost:3306/xxl_job_executor_mq?useSSL=false&serverTimezone=UTC",
                 "root", "Q23897876p"
         );
-        String sql = "INSERT INTO user_scheduled_common_task " +
+        String sql = "INSERT INTO user_scheduled_realtime_task " +
                 "(id, task_name, biz_name, biz_group, next_trigger_time, process, enable, payload,scheduled_type,create_at,update_at,topic,task_id) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?)";
         PreparedStatement ps = conn.prepareStatement(sql);
