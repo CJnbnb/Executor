@@ -104,13 +104,13 @@ public class ProducerHandler {
                 futures.add(executors.submit(() -> {
                     boolean isSuccess = producerMessage.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
-                    if (isSuccess) {
+//                    if (isSuccess) {
                         boolean taskSuccess = commonTaskService.changeTaskInfo(task);
                         if (taskSuccess) {
                             successId.add(task.getId());
                         }
                         logger.info("更改任务下次执行时间成功");
-                    }
+//                    }
                     return isSuccess;
                 }));
             }
