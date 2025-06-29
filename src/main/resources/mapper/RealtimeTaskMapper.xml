@@ -33,7 +33,8 @@
         SET last_trigger_time = #{lastTriggerTime},
             next_trigger_time = #{nextTriggerTime},
             enable = #{enable},
-            update_at = #{updateAt}
+            update_at = #{updateAt},
+            process = 'done'
         WHERE id = #{id}
     </update>
 

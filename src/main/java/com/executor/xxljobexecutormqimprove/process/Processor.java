@@ -63,9 +63,8 @@ public class Processor implements MessageListenerConcurrently {
                 process(task);
                 logger.info("收到信息{}",task);
             }catch (Exception e){
-                logger.info("收到信息失败");
-                return ConsumeConcurrentlyStatus.RECONSUME_LATER;
-            }
+                logger.info("收到信息失败{}",e);
+                return ConsumeConcurrentlyStatus.RECONSUME_LATER;            }
         }
         return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
@@ -89,7 +88,7 @@ public class Processor implements MessageListenerConcurrently {
         entity.setBizName(dto.getBizName());
         entity.setBizGroup(dto.getBizGroup());
         entity.setScheduledConf(dto.getScheduledConf());
-        if (dto.getTopic().isEmpty()){
+        if ( dto.getTopic() == null || dto.getTopic().isEmpty()){
             entity.setTopic("executorPool");
         }else {
             entity.setTopic(dto.getTopic());
@@ -122,7 +121,7 @@ public class Processor implements MessageListenerConcurrently {
         entity.setBizName(dto.getBizName());
         entity.setBizGroup(dto.getBizGroup());
         entity.setScheduledConf(dto.getScheduledConf());
-        if (dto.getTopic().isEmpty()){
+        if (dto.getTopic() == null || dto.getTopic().isEmpty()){
             entity.setTopic("executorPool");
         }else {
             entity.setTopic(dto.getTopic());

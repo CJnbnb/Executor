@@ -48,6 +48,8 @@ public class ProducerHandler {
         while (true) {
             /**
              * 加个校验逻辑
+             * TODO
+             * 可以考虑加一个taskName的索引
              */
             String param = XxlJobHelper.getJobParam();
             String[] remoteArg = ValidateParamUtil.validateAndParseJobParam(param);
@@ -67,8 +69,7 @@ public class ProducerHandler {
             List<ProduceCommonTaskMessage> produceCommonTaskMessageList;
             List<String> ids;
             try {
-//                走XxlJob的分片规则
-//            分片参数处理
+//                走XxlJob的分片规则            分片参数处理
                 if (shardIndex == 0 || shardTotal == 1) {
                     produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasks(bizName, bizGroup, windowEnd, LIMIT_COUNT);
                 } else {

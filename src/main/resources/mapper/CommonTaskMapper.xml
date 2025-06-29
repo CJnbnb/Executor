@@ -8,12 +8,12 @@
     <!-- 这里写你的SQL语句 -->
 
     <insert id="upsetTskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
-        insert into user_scheduled_common_task (id, task_name, biz_name, biz_group, next_trigger_time, scheduled_conf,
-                                                create_at, update_at, scheduled_type, enable, payload)
-        VALUES (#{id}, #{taskName}, #{bizName}, #{bizGroup}, #{nextTriggerTime}, #{scheduledConf}, #{createAt},
-                #{updateAt}, #{scheduledType}, #{enable},#{payload}) ON DUPLICATE KEY
+        insert into user_scheduled_common_task (id,task_id, task_name, biz_name, biz_group, next_trigger_time, scheduled_conf,
+                                                create_at, update_at, scheduled_type, enable, payload,topic,process)
+        VALUES (#{id},#{taskId}, #{taskName}, #{bizName}, #{bizGroup}, #{nextTriggerTime}, #{scheduledConf}, #{createAt},
+                #{updateAt}, #{scheduledType}, #{enable},#{payload}, #{topic}, #{process}) ON DUPLICATE KEY
         UPDATE
-            next_trigger_time = VALUES (nextTrigger_time),
+            next_trigger_time = VALUES (next_trigger_time),
             scheduled_conf = VALUES (scheduled_conf),
             update_at = VALUES (update_at),
             scheduled_type = VALUES (scheduled_type),
