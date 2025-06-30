@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>任务详情</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-4">
+    <h2>任务详情</h2>
+    <table class="table table-bordered">
+        <tr><th>ID</th><td th:text="${task.id}"></td></tr>
+        <tr><th>任务名</th><td th:text="${task.taskName}"></td></tr>
+        <tr><th>分组</th><td th:text="${task.bizGroup}"></td></tr>
+        <tr><th>状态</th><td th:text="${task.process}"></td></tr>
+        <tr><th>上次执行时间</th><td th:text="${task.lastTriggerTime}"></td></tr>
+        <tr><th>下次调度时间</th><td th:text="${task.nextTriggerTime}"></td></tr>
+        <tr><th>调度类型</th><td th:text="${task.scheduledType}"></td></tr>
+        <tr><th>调度表达式</th><td th:text="${task.scheduledConf}"></td></tr>
+        <tr><th>Payload</th><td th:text="${task.payload}"></td></tr>
+        <tr><th>Topic</th><td th:text="${task.topic}"></td></tr>
+        <tr><th>Enable</th><td th:text="${task.enable}"></td></tr>
+    </table>
+    <a href="/dashboard" class="btn btn-secondary">返回总览</a>
+</div>
+</body>
+</html> 

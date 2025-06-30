@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.executor.xxljobexecutormqimprove.mapper.MonitorTaskMapper">
+
+    <select id="selectAllTasks" resultType="com.executor.xxljobexecutormqimprove.model.MonitorTaskVO">
+        SELECT * FROM user_scheduled_common_task
+    </select>
+
+    <select id="selectExceptionTasks" resultType="com.executor.xxljobexecutormqimprove.model.MonitorTaskVO">
+        SELECT * FROM user_scheduled_common_task WHERE process = 'exception'
+    </select>
+
+    <select id="selectRecentTasks" resultType="com.executor.xxljobexecutormqimprove.model.MonitorTaskVO">
+        SELECT * FROM user_scheduled_common_task ORDER BY last_trigger_time DESC LIMIT #{limit}
+    </select>
+
+    <select id="selectTaskById" resultType="com.executor.xxljobexecutormqimprove.model.MonitorTaskVO">
+        SELECT * FROM user_scheduled_common_task WHERE id = #{id}
+    </select>
+
+    <select id="countByProcess" resultType="int">
+        SELECT COUNT(*) FROM user_scheduled_common_task WHERE process = #{process}
+    </select>
+
+    <select id="countAll" resultType="int">
+        SELECT COUNT(*) FROM user_scheduled_common_task
+    </select>
+
+    <select id="selectAllCommonTasks" resultType="com.executor.xxljobexecutormqimprove.model.MonitorTaskVO">
+        SELECT * FROM user_scheduled_common_task WHERE scheduled_type = 'common'
+    </select>
+    <select id="selectAllRealTasks" resultType="com.executor.xxljobexecutormqimprove.model.MonitorTaskVO">
+        SELECT * FROM user_scheduled_common_task WHERE scheduled_type = 'real'
+    </select>
+    <select id="countCommonByProcess" resultType="int">
+        SELECT COUNT(*) FROM user_scheduled_common_task WHERE scheduled_type = 'common' AND process = #{process}
+    </select>
+    <select id="countRealByProcess" resultType="int">
+        SELECT COUNT(*) FROM user_scheduled_common_task WHERE scheduled_type = 'real' AND process = #{process}
+    </select>
+
+</mapper> 
