@@ -1,4 +1,4 @@
-package com.executor.xxljobexecutormqimprove.core.thread;
+package com.executor.xxljobexecutormqimprove.core.scheduled;
 
 import com.executor.xxljobexecutormqimprove.core.service.RetryTaskService;
 import jakarta.annotation.PostConstruct;

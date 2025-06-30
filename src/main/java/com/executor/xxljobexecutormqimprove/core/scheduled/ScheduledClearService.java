@@ -1,4 +1,4 @@
-package com.executor.xxljobexecutormqimprove.core.thread;
+package com.executor.xxljobexecutormqimprove.core.scheduled;
 
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
 package com.executor.xxljobexecutormqimprove.core.base;
 
-import com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.RetryTaskUpdateDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.RetryTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.dto.RetryTaskUpdateDTO;
 import com.executor.xxljobexecutormqimprove.mapper.RetryTaskMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

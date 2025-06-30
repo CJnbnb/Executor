@@ -1,7 +1,7 @@
 package com.executor.xxljobexecutormqimprove.mapper;
 
-import com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.RetryTaskUpdateDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.RetryTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.dto.RetryTaskUpdateDTO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;

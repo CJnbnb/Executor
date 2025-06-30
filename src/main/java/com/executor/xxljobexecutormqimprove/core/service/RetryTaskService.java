@@ -1,10 +1,10 @@
 package com.executor.xxljobexecutormqimprove.core.service;
 
 import com.executor.xxljobexecutormqimprove.core.base.RetryTaskBaseService;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
-import com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.RetryTaskUpdateDTO;
-import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.entity.RetryTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.dto.RetryTaskUpdateDTO;
+import com.executor.xxljobexecutormqimprove.core.producer.MessageProducer;
 import com.executor.xxljobexecutormqimprove.util.CalculateRetryTaskUtil;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @Service
@@ -25,7 +24,7 @@ public class RetryTaskService {
     @Autowired
     private Gson gson;
 
-    private static ProducerMessage producerMessage = new ProducerMessage();
+    private static MessageProducer messageProducer = new MessageProducer();
 
     public void recordTaskByTask(ProduceCommonTaskMessage produceCommonTaskMessage){
         RetryTaskEntity retryTaskEntity = new RetryTaskEntity();
@@ -46,7 +45,7 @@ public class RetryTaskService {
         }
         for (RetryTaskEntity retryTaskEntity : retryTaskEntities){
             try {
-                boolean isSuccess = producerMessage.send(gson.fromJson(retryTaskEntity.getArgs(), ProduceCommonTaskMessage.class));
+                boolean isSuccess = messageProducer.send(gson.fromJson(retryTaskEntity.getArgs(), ProduceCommonTaskMessage.class));
                 if (isSuccess){
                     retryTaskBaseService.removeRetryTask(retryTaskEntity.getId());
                 }

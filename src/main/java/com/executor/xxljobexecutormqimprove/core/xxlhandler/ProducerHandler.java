@@ -1,9 +1,9 @@
-package com.executor.xxljobexecutormqimprove.core.schedulerhandler;
+package com.executor.xxljobexecutormqimprove.core.xxlhandler;
 
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
-import com.executor.xxljobexecutormqimprove.producer.ProducerMessage;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.core.producer.MessageProducer;
 import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
@@ -31,7 +31,7 @@ public class ProducerHandler {
     private DataSourceTransactionManager transactionManager;
 
     @Autowired
-    private ProducerMessage producerMessage;
+    private MessageProducer messageProducer;
 
     @Autowired
     private CommonTaskBaseService commonTaskBaseService;
@@ -103,7 +103,7 @@ public class ProducerHandler {
             //发送业务MQ
             for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
                 futures.add(executors.submit(() -> {
-                    boolean isSuccess = producerMessage.send(task);
+                    boolean isSuccess = messageProducer.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
 //                    if (isSuccess) {
                         boolean taskSuccess = commonTaskService.changeTaskInfo(task);

@@ -1,6 +1,6 @@
 package com.executor.xxljobexecutormqimprove.core.service;
 
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 
 import java.util.List;
 

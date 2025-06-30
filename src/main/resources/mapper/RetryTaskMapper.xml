@@ -6,12 +6,12 @@
 <mapper namespace="com.executor.xxljobexecutormqimprove.mapper.RetryTaskMapper">
 
 
-    <insert id="insertRetryTask" parameterType="com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity">
+    <insert id="insertRetryTask" parameterType="com.executor.xxljobexecutormqimprove.model.entity.RetryTaskEntity">
         INSERT INTO retry_task (id,next_trigger_time,retry_count,args,create_at)
         VALUES (#{id},#{nextTriggerTime},#{retryCount},#{args},#{createAt})
     </insert>
 
-    <update id="updateRecord" parameterType="com.executor.xxljobexecutormqimprove.entity.RetryTaskUpdateDTO">
+    <update id="updateRecord" parameterType="com.executor.xxljobexecutormqimprove.model.dto.RetryTaskUpdateDTO">
         UPDATE retry_task
         SET
             next_trigger_time = #{nextTriggerTime},
@@ -25,7 +25,7 @@
     </delete>
 
 
-    <select id="findRetryableTasks" resultType="com.executor.xxljobexecutormqimprove.entity.RetryTaskEntity">
+    <select id="findRetryableTasks" resultType="com.executor.xxljobexecutormqimprove.model.entity.RetryTaskEntity">
         SELECT id,
         next_trigger_time,
         retry_count,

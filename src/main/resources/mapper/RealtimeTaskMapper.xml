@@ -6,7 +6,7 @@
 <mapper namespace="com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper">
 
     <!-- 插入或更新任务 -->
-    <insert id="upsetTaskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity">
+    <insert id="upsetTaskInfo" parameterType="com.executor.xxljobexecutormqimprove.model.entity.RealTimeTaskEntity">
         INSERT INTO user_scheduled_realtime_task (
             id, task_id, task_name, biz_name, biz_group, next_trigger_time, last_trigger_time, scheduled_conf,
             create_at, update_at, scheduled_type, enable, payload, topic, process
@@ -28,7 +28,7 @@
 
 
     <!-- 更新任务触发信息 -->
-    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity">
+    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.model.entity.RealTimeTaskEntity">
         UPDATE user_scheduled_realtime_task
         SET last_trigger_time = #{lastTriggerTime},
             next_trigger_time = #{nextTriggerTime},
@@ -39,7 +39,7 @@
     </update>
 
     <!-- 查询所有可调度任务（时间轮预读用） -->
-    <select id="selectSchedulableTasks" resultType="com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity">
+    <select id="selectSchedulableTasks" resultType="com.executor.xxljobexecutormqimprove.model.entity.RealTimeTaskEntity">
         SELECT * FROM user_scheduled_realtime_task
         WHERE next_trigger_time &lt; #{end}
           AND (process IS NULL OR process != 'processing')
@@ -47,7 +47,7 @@
         ORDER BY next_trigger_time ASC
         LIMIT #{limit}
     </select>
-    <select id="loadById" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+    <select id="loadById" resultType="com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage">
         SELECT * FROM user_scheduled_realtime_task
         WHERE id = #{id}
     </select>

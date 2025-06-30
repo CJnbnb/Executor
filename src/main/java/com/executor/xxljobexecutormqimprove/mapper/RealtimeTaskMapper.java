@@ -1,7 +1,7 @@
 package com.executor.xxljobexecutormqimprove.mapper;
 
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
-import com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.entity.RealTimeTaskEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;

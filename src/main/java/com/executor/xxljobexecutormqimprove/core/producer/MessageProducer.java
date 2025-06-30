@@ -1,9 +1,8 @@
-package com.executor.xxljobexecutormqimprove.producer;
+package com.executor.xxljobexecutormqimprove.core.producer;
 
-import com.executor.xxljobexecutormqimprove.core.base.RetryTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.RetryTaskService;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
-import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.entity.RocketMQEntity;
 import jakarta.annotation.PreDestroy;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
@@ -24,13 +23,13 @@ import javax.annotation.PostConstruct;
  * 用来计算时间戳然后进行业务发送
  */
 @Component
-public class ProducerMessage {
+public class MessageProducer {
     @Autowired
     private RocketMQEntity rocketMQEntity;
 
     @Autowired
     private RetryTaskService retryTaskService;
-    private final Logger logger = LoggerFactory.getLogger(ProducerMessage.class);
+    private final Logger logger = LoggerFactory.getLogger(MessageProducer.class);
 
     private DefaultMQProducer producer;
     @PostConstruct

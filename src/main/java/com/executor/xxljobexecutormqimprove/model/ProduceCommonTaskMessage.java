@@ -1,4 +1,4 @@
-package com.executor.xxljobexecutormqimprove.entity;
+package com.executor.xxljobexecutormqimprove.model;
 
 import lombok.Data;
 

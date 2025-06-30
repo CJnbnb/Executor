@@ -1,4 +1,4 @@
-package com.executor.xxljobexecutormqimprove.core.schedulerhandler;
+package com.executor.xxljobexecutormqimprove.core.xxlhandler;
 
 import com.executor.xxljobexecutormqimprove.core.context.ShardContext;
 import com.xxl.job.core.context.XxlJobContext;

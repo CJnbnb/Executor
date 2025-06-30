@@ -1,12 +1,13 @@
-package com.executor.xxljobexecutormqimprove.entity;
+package com.executor.xxljobexecutormqimprove.model.entity;
 
 import lombok.Data;
 
 import java.time.LocalDateTime;
-
 @Data
-public class RetryTaskUpdateDTO {
+public class RetryTaskEntity {
     private String id;
     private Long nextTriggerTime;
     private Integer retryCount;
+    private String args;
+    private LocalDateTime createAt;
 }

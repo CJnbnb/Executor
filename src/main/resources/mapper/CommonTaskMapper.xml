@@ -7,7 +7,7 @@
 
     <!-- 这里写你的SQL语句 -->
 
-    <insert id="upsetTskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
+    <insert id="upsetTskInfo" parameterType="com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity">
         insert into user_scheduled_common_task (id,task_id, task_name, biz_name, biz_group, next_trigger_time, scheduled_conf,
                                                 create_at, update_at, scheduled_type, enable, payload,topic,process)
         VALUES (#{id},#{taskId}, #{taskName}, #{bizName}, #{bizGroup}, #{nextTriggerTime}, #{scheduledConf}, #{createAt},
@@ -22,7 +22,7 @@
     </insert>
 
 
-    <select id="lockAndSelectTasks" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+    <select id="lockAndSelectTasks" resultType="com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage">
         SELECT * FROM user_scheduled_common_task
         WHERE biz_name = #{bizName}
         AND biz_group = #{bizGroup}
@@ -32,7 +32,7 @@
         LIMIT #{limit}
     </select>
 
-    <select id="lockAndSelectTasksByShard" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+    <select id="lockAndSelectTasksByShard" resultType="com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage">
         SELECT * FROM user_scheduled_common_task
         WHERE biz_name = #{bizName}
           AND biz_group = #{bizGroup}
@@ -65,7 +65,7 @@
         </foreach>
     </update>
 
-    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO">
+    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO">
         UPDATE user_scheduled_common_task
         SET last_trigger_time = #{lastTriggerTime},
             next_trigger_time = #{nextTriggerTime},

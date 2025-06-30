@@ -3,13 +3,12 @@ package com.executor.xxljobexecutormqimprove.process;
 import com.alibaba.fastjson.JSONObject;
 import com.executor.xxljobexecutormqimprove.Enum.ProcessEnum;
 import com.executor.xxljobexecutormqimprove.Enum.TaskEnableEnum;
-import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.RealTimeTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.RocketMQEntity;
+import com.executor.xxljobexecutormqimprove.model.dto.ProcessCommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.entity.RealTimeTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.entity.RocketMQEntity;
 import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
 import com.executor.xxljobexecutormqimprove.core.base.RealtimeTaskBaseService;
-import com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper;
 import com.executor.xxljobexecutormqimprove.util.CronTimeUtil;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -24,14 +23,13 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
-public class Processor implements MessageListenerConcurrently {
+public class UpsertTaskProcessor implements MessageListenerConcurrently {
 
-    private Logger logger = LoggerFactory.getLogger(Processor.class);
+    private Logger logger = LoggerFactory.getLogger(UpsertTaskProcessor.class);
 
     @Autowired
     private RocketMQEntity rocketMQEntity;

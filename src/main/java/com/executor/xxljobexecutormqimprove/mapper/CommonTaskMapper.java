@@ -1,8 +1,8 @@
 package com.executor.xxljobexecutormqimprove.mapper;
 
-import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
