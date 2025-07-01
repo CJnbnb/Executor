@@ -1,3 +1,5 @@
+create database xxl_job_executor_mq;
+use xxl_job_executor_mq;
 create table retry_task
 (
     id                varchar(32)   not null comment '主键ID'

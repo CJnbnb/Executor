@@ -82,7 +82,7 @@ public class ProducerHandler {
                     logger.info("没有可处理的任务，事务已提交");
                     break;
                 }
-                
+
                 ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
                 commonTaskBaseService.lockTaskById(ids);
                 transactionManager.commit(status);
@@ -96,6 +96,9 @@ public class ProducerHandler {
 
             /**
              * 用线程池优化业务执行速度
+             */
+            /*TODO
+            不打算进行批量提交用单独提交
              */
             List<Future<Boolean>> futures = new ArrayList<>();
             //保证线程安全
