@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +23,7 @@ public class CommonTaskServiceImpl implements CommonTaskService{
 
     private Logger logger = LoggerFactory.getLogger(CommonTaskServiceImpl.class);
 
-    @Override
-    public boolean changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage) {
+    private void changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage) {
         Long lastTriggerTime = produceCommonTaskMessage.getNextTriggerTime();
         Long nextTriggerTime = null;
         String enable = TaskEnableEnum.TASK_ENABLE;
@@ -71,5 +71,12 @@ public class CommonTaskServiceImpl implements CommonTaskService{
             dtoList.add(dto);
         }
         commonTaskBaseService.batchChangeTaskInfo(dtoList);
+    }
+
+    @Override
+    @Transactional
+    public void changeTask(ProduceCommonTaskMessage produceCommonTaskMessage) {
+        changeTaskInfo(produceCommonTaskMessage);
+        commonTaskBaseService.unlockTaskById(produceCommonTaskMessage.getId());
     }
 }

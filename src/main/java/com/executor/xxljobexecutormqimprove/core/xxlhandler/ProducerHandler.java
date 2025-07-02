@@ -109,26 +109,27 @@ public class ProducerHandler {
                     boolean isSuccess = messageProducer.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
 //                    if (isSuccess) {
-                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
-                        if (taskSuccess) {
-                            successId.add(task.getId());
-                        }
+//                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
+//                        if (taskSuccess) {
+//                            successId.add(task.getId());
+//                        }
+                        commonTaskService.changeTask(task);
                         logger.info("更改任务下次执行时间成功");
 //                    }
                     return isSuccess;
                 }));
             }
             //阻塞等待
-            for (Future<Boolean> future : futures) {
-                try {
-                    future.get();
-                } catch (Exception e) {
-                    logger.error("MQ异步任务发送异常{}", e.getMessage());
-                }
-            }
+//            for (Future<Boolean> future : futures) {
+//                try {
+//                    future.get();
+//                } catch (Exception e) {
+//                    logger.error("MQ异步任务发送异常{}", e.getMessage());
+//                }
+//            }
 
-            // 4. 解锁（回写状态）
-            commonTaskBaseService.unlockTasks(successId);
+//            // 4. 解锁（回写状态）
+//            commonTaskBaseService.unlockTasks(successId);
 
         }
     }

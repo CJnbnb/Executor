@@ -32,6 +32,8 @@ public interface CommonTaskMapper {
 
     int unlockTasks(@Param("ids") List<String> ids);
 
+    int unlockTaskById(@Param("id") String id);
+
     boolean updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
     void batchUpdateTaskTriggerInfo(@Param("list") List<ChangeTaskInfoDTO> list);
     List<String> selectTimeoutProcessingTaskIDs(@Param("now") Long now);

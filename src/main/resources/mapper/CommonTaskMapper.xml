@@ -65,6 +65,14 @@
         </foreach>
     </update>
 
+    <update id="unlockTaskById">
+        UPDATE user_scheduled_common_task
+        SET process = "done",
+            locked_at = NULL
+        WHERE id = #{id}
+    </update>
+
+
     <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO">
         UPDATE user_scheduled_common_task
         SET last_trigger_time = #{lastTriggerTime},
