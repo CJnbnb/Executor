@@ -18,7 +18,7 @@ public class ExecutorTrigger {
     public void trigger(String jobId){
         ProduceCommonTaskMessage produceCommonTaskMessage = realtimeTaskBaseService.loadById(jobId);
         boolean isSuccess = messageProducer.send(produceCommonTaskMessage);
-        if (!isSuccess){
+        if (!Boolean.TRUE.equals(isSuccess)){
             logger.error("realtime消息发送失败");
         }
     }

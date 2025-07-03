@@ -50,7 +50,7 @@ public class RetryTaskService {
         for (RetryTaskEntity retryTaskEntity : retryTaskEntities){
             try {
                 boolean isSuccess = messageProducer.send(gson.fromJson(retryTaskEntity.getArgs(), ProduceCommonTaskMessage.class));
-                if (isSuccess){
+                if (Boolean.TRUE.equals(isSuccess)){
                     retryTaskBaseService.removeRetryTask(retryTaskEntity.getId());
                 }
             }catch (Exception e){

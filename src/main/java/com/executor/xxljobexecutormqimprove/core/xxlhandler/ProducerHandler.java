@@ -101,7 +101,7 @@ public class ProducerHandler {
             for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
                 executors.submit(() -> {
                     boolean isSuccess = messageProducer.send(task);
-                    if (isSuccess){
+                    if (Boolean.TRUE.equals(isSuccess)){
                         logger.info("{}任务成功发送,详细信息为{}",task.getId(),task);
                     }else {
                         logger.error("{}消息发送失败，丢入重试队列,详细信息为{}",task.getId(),task);

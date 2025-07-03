@@ -41,7 +41,7 @@ public class MessageProducer {
     }
 
     @Retryable(
-            value = {Exception.class},
+            value = {RuntimeException.class},
             maxAttempts = 2,
             backoff = @Backoff(delay = 2000,multiplier = 2)
     )
@@ -52,12 +52,12 @@ public class MessageProducer {
         Message message =  new Message(topic,tag,messageBody.getBytes());
         SendResult sendResult = new SendResult();
         try {
-             logger.info(String.valueOf(message));
-             sendResult = producer.send(message);
+            logger.info(String.valueOf(message));
+            sendResult = producer.send(message);
             logger.info("result{}",sendResult);
         }catch (Exception e){
             logger.error("业务MQ发送失败,失败消息为{}，信息为{}",e.getMessage(),message);
-            return false;
+            throw new RuntimeException();
         }
         return true;
     }
