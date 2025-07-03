@@ -25,10 +25,10 @@ public class RetryTaskService {
     private Gson gson;
 
     /*
-    TODO
+    构造函数避免Spring的ReTask代理
     改一下发送
      */
-    private static MessageProducer messageProducer = new MessageProducer();
+    private static final MessageProducer messageProducer = new MessageProducer();
 
     public void recordTaskByTask(ProduceCommonTaskMessage produceCommonTaskMessage){
         RetryTaskEntity retryTaskEntity = new RetryTaskEntity();
