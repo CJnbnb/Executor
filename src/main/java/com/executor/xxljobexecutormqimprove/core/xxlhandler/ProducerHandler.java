@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class ProducerHandler {
     private static Logger logger = LoggerFactory.getLogger(ProducerHandler.class);
 
-    private static final Integer LIMIT_COUNT = 200;
+    private static final Integer LIMIT_COUNT = 1000;
 
     @Autowired
     private DataSourceTransactionManager transactionManager;
@@ -97,39 +97,21 @@ public class ProducerHandler {
             /**
              * 用线程池优化业务执行速度
              */
-            /*TODO
-            不打算进行批量提交用单独提交
-             */
-            List<Future<Boolean>> futures = new ArrayList<>();
-            //保证线程安全
-            List<String> successId = new CopyOnWriteArrayList<>();
             //发送业务MQ
             for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-                futures.add(executors.submit(() -> {
+                executors.submit(() -> {
                     boolean isSuccess = messageProducer.send(task);
-                    logger.info("已发送任务: {}", task.getTaskName());
-//                    if (isSuccess) {
-//                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
-//                        if (taskSuccess) {
-//                            successId.add(task.getId());
-//                        }
-                        commonTaskService.changeTask(task);
-                        logger.info("更改任务下次执行时间成功");
-//                    }
-                    return isSuccess;
-                }));
+                    if (isSuccess){
+                        logger.info("{}任务成功发送,详细信息为{}",task.getId(),task);
+                    }else {
+                        logger.error("{}消息发送失败，丢入重试队列,详细信息为{}",task.getId(),task);
+                    }
+                });
             }
-            //阻塞等待
-//            for (Future<Boolean> future : futures) {
-//                try {
-//                    future.get();
-//                } catch (Exception e) {
-//                    logger.error("MQ异步任务发送异常{}", e.getMessage());
-//                }
-//            }
 
-//            // 4. 解锁（回写状态）
-//            commonTaskBaseService.unlockTasks(successId);
+            for (ProduceCommonTaskMessage task : produceCommonTaskMessageList){
+                commonTaskService.changeTask(task);
+            }
 
         }
     }

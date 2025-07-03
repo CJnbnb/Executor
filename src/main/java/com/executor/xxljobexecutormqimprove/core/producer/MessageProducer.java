@@ -56,7 +56,7 @@ public class MessageProducer {
              sendResult = producer.send(message);
             logger.info("result{}",sendResult);
         }catch (Exception e){
-            logger.error("业务MQ发送失败,失败消息为{}，id为{}",e.getMessage(),sendResult.getMsgId());
+            logger.error("业务MQ发送失败,失败消息为{}，信息为{}",e.getMessage(),message);
             return false;
         }
         return true;

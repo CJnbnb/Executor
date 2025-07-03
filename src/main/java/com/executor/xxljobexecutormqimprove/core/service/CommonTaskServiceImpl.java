@@ -23,7 +23,7 @@ public class CommonTaskServiceImpl implements CommonTaskService{
 
     private Logger logger = LoggerFactory.getLogger(CommonTaskServiceImpl.class);
 
-    private void changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage) {
+    public boolean changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage) {
         Long lastTriggerTime = produceCommonTaskMessage.getNextTriggerTime();
         Long nextTriggerTime = null;
         String enable = TaskEnableEnum.TASK_ENABLE;
@@ -74,7 +74,6 @@ public class CommonTaskServiceImpl implements CommonTaskService{
     }
 
     @Override
-    @Transactional
     public void changeTask(ProduceCommonTaskMessage produceCommonTaskMessage) {
         changeTaskInfo(produceCommonTaskMessage);
         commonTaskBaseService.unlockTaskById(produceCommonTaskMessage.getId());

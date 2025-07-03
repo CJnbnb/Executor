@@ -24,6 +24,10 @@ public class RetryTaskService {
     @Autowired
     private Gson gson;
 
+    /*
+    TODO
+    改一下发送
+     */
     private static MessageProducer messageProducer = new MessageProducer();
 
     public void recordTaskByTask(ProduceCommonTaskMessage produceCommonTaskMessage){
