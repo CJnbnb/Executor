@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.executor.xxljobexecutormqimprove.mapper.CommonTaskMapper">
+
+    <!-- 这里写你的SQL语句 -->
+
+    <insert id="upsetTskInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
+        insert into user_scheduled_common_task (id, task_name, biz_name, biz_group, next_trigger_time, scheduled_conf,
+                                                create_at, update_at, scheduled_type, enable, payload)
+        VALUES (#{id}, #{task_name}, #{biz_name}, #{biz_group}, #{next_trigger_time}, #{scheduled_conf}, #{create_at},
+                #{update_at}, #{scheduled_type}, #{enable},#{payload}) ON DUPLICATE KEY
+        UPDATE
+            next_trigger_time = VALUES (next_trigger_time),
+            scheduled_conf = VALUES (scheduled_conf),
+            update_at = VALUES (update_at),
+            scheduled_type = VALUES (scheduled_type),
+            enable = VALUES (enable),
+            payload = VALUES (payload)
+    </insert>
+
+
+    <select id="lockAndSelectTasks" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+        SELECT * FROM user_scheduled_common_task
+        WHERE biz_name = #{bizName}
+        AND biz_group = #{bizGroup}
+        AND next_trigger_time &lt; #{end}
+        AND (process IS NULL OR process != 'processing')
+        AND enable = '1'
+        LIMIT #{limit}
+        FOR UPDATE;  <!-- 关键：查询时立即加锁 -->
+    </select>
+
+    <select id="lockAndSelectTasksByShard" resultType="com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage">
+        SELECT * FROM user_scheduled_common_task
+        WHERE biz_name = #{bizName}
+          AND biz_group = #{bizGroup}
+          AND next_trigger_time &lt; #{end}
+          AND (process IS NULL OR process != 'processing')
+          AND enable = '1'
+          AND MOD(id, #{shardCount}) = #{shardIndex}
+            LIMIT #{limit}
+            FOR UPDATE
+    </select>
+
+
+    <update id="lockTaskById">
+        UPDATE user_scheduled_common_task
+        SET process = 'processing'
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="unlockTasks" parameterType="map">
+        UPDATE user_scheduled_common_task
+        SET process = "done"
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <update id="updateTaskTriggerInfo" parameterType="com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO">
+        UPDATE user_scheduled_common_task
+        SET last_trigger_time = #{lastTriggerTime},
+            next_trigger_time = #{nextTriggerTime},
+            enable = #{enable}
+        WHERE id = #{id}
+    </update>
+
+    <update id="batchUpdateTaskTriggerInfo" parameterType="list">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE user_scheduled_common_task
+            SET last_trigger_time = #{item.lastTriggerTime},
+            next_trigger_time = #{item.nextTriggerTime},
+            enable = #{item.enable}
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+    <!-- CommonTaskMapper.xml -->
+    <delete id="deleteDisabledTasks">
+        DELETE FROM user_scheduled_common_task WHERE enable = '0'
+    </delete>
+
+</mapper>
