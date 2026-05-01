@@ -16,19 +16,28 @@ public class DashboardService {
     private DashboardStore dashboardStore;
 
     public Map<String, Object> stats() {
-        Map<String, Long> raw = dashboardStore.countStats(System.currentTimeMillis());
+        Map<String, Object> raw = dashboardStore.countStats(System.currentTimeMillis());
         Map<String, Object> result = new HashMap<>();
-        result.put("total", raw.getOrDefault("total", 0L));
-        result.put("enabled", raw.getOrDefault("enabled", 0L));
-        result.put("pending", raw.getOrDefault("pending", 0L));
-        result.put("disabled", raw.getOrDefault("disabled", 0L));
+        result.put("total", toLong(raw.get("total")));
+        result.put("enabled", toLong(raw.get("enabled")));
+        result.put("pending", toLong(raw.get("pending")));
+        result.put("disabled", toLong(raw.get("disabled")));
+        result.put("processing", toLong(raw.get("processing")));
+        result.put("stuck", toLong(raw.get("stuck")));
         return result;
     }
 
-    public Map<String, Object> tasks(int page, int size, String taskName, String bizName) {
+    private long toLong(Object v) {
+        if (v instanceof Number n) return n.longValue();
+        return 0L;
+    }
+
+    public Map<String, Object> tasks(int page, int size, String taskName, String bizName,
+                                      String bizGroup, String enable, String process) {
         int offset = (page - 1) * size;
-        List<CommonTaskEntity> list = dashboardStore.selectTasksPage(offset, size, taskName, bizName);
-        long total = dashboardStore.countTasks(taskName, bizName);
+        List<CommonTaskEntity> list = dashboardStore.selectTasksPage(offset, size,
+                taskName, bizName, bizGroup, enable, process);
+        long total = dashboardStore.countTasks(taskName, bizName, bizGroup, enable, process);
         Map<String, Object> result = new HashMap<>();
         result.put("list", list);
         result.put("total", total);
@@ -42,7 +51,23 @@ public class DashboardService {
         return dashboardStore.toggleEnable(id) > 0;
     }
 
+    public boolean batchToggleEnable(List<String> ids, String enable) {
+        return dashboardStore.batchToggleEnable(ids, enable) > 0;
+    }
+
     public boolean delete(String id) {
         return dashboardStore.deleteById(id) > 0;
+    }
+
+    public boolean batchDelete(List<String> ids) {
+        return dashboardStore.batchDeleteByIds(ids) > 0;
+    }
+
+    public boolean releaseTask(String id) {
+        return dashboardStore.releaseTask(id) > 0;
+    }
+
+    public boolean batchReleaseTasks(List<String> ids) {
+        return dashboardStore.batchReleaseTasks(ids) > 0;
     }
 }

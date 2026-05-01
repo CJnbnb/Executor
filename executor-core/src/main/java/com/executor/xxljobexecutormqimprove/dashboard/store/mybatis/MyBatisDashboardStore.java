@@ -16,18 +16,19 @@ public class MyBatisDashboardStore implements DashboardStore {
     }
 
     @Override
-    public Map<String, Long> countStats(long now) {
+    public Map<String, Object> countStats(long now) {
         return mapper.countStats(now);
     }
 
     @Override
-    public List<CommonTaskEntity> selectTasksPage(int offset, int size, String taskName, String bizName) {
-        return mapper.selectTasksPage(offset, size, taskName, bizName);
+    public List<CommonTaskEntity> selectTasksPage(int offset, int size, String taskName, String bizName,
+                                                   String bizGroup, String enable, String process) {
+        return mapper.selectTasksPage(offset, size, taskName, bizName, bizGroup, enable, process);
     }
 
     @Override
-    public long countTasks(String taskName, String bizName) {
-        return mapper.countTasks(taskName, bizName);
+    public long countTasks(String taskName, String bizName, String bizGroup, String enable, String process) {
+        return mapper.countTasks(taskName, bizName, bizGroup, enable, process);
     }
 
     @Override
@@ -36,7 +37,27 @@ public class MyBatisDashboardStore implements DashboardStore {
     }
 
     @Override
+    public int batchToggleEnable(List<String> ids, String enable) {
+        return mapper.batchToggleEnable(ids, enable);
+    }
+
+    @Override
     public int deleteById(String id) {
         return mapper.deleteById(id);
+    }
+
+    @Override
+    public int batchDeleteByIds(List<String> ids) {
+        return mapper.batchDeleteByIds(ids);
+    }
+
+    @Override
+    public int releaseTask(String id) {
+        return mapper.releaseTask(id);
+    }
+
+    @Override
+    public int batchReleaseTasks(List<String> ids) {
+        return mapper.batchReleaseTasks(ids);
     }
 }

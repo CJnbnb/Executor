@@ -48,7 +48,7 @@
 
     <update id="lockTaskById">
         UPDATE user_scheduled_common_task
-        SET process = 'processing'
+        SET process = 'processing', update_at = NOW()
         WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}

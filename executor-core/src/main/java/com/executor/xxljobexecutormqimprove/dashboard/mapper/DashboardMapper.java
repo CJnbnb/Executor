@@ -10,22 +10,31 @@ import java.util.Map;
 @Mapper
 public interface DashboardMapper {
 
-    /** 统计数据：total, enabled, pending（nextTriggerTime < now）, disabled */
-    Map<String, Long> countStats(@Param("now") long now);
+    Map<String, Object> countStats(@Param("now") long now);
 
-    /** 分页查询任务列表，支持模糊搜索 */
     List<CommonTaskEntity> selectTasksPage(@Param("offset") int offset,
                                            @Param("size") int size,
                                            @Param("taskName") String taskName,
-                                           @Param("bizName") String bizName);
+                                           @Param("bizName") String bizName,
+                                           @Param("bizGroup") String bizGroup,
+                                           @Param("enable") String enable,
+                                           @Param("process") String process);
 
-    /** 符合搜索条件的总记录数 */
     long countTasks(@Param("taskName") String taskName,
-                    @Param("bizName") String bizName);
+                    @Param("bizName") String bizName,
+                    @Param("bizGroup") String bizGroup,
+                    @Param("enable") String enable,
+                    @Param("process") String process);
 
-    /** 切换启用/禁用 */
     int toggleEnable(@Param("id") String id);
 
-    /** 删除任务 */
+    int batchToggleEnable(@Param("ids") List<String> ids, @Param("enable") String enable);
+
     int deleteById(@Param("id") String id);
+
+    int batchDeleteByIds(@Param("ids") List<String> ids);
+
+    int releaseTask(@Param("id") String id);
+
+    int batchReleaseTasks(@Param("ids") List<String> ids);
 }

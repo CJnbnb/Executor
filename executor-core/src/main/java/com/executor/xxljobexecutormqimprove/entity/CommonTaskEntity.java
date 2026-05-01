@@ -16,6 +16,7 @@ public class CommonTaskEntity {
     private String updateAt;
     private String scheduledType;
     private String enable;
+    private String process;
     private String payload;
     private String topic;
 }

@@ -10,51 +10,63 @@
         .header { background: #1f2937; color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
         .header h1 { font-size: 18px; font-weight: 600; }
         .header .ver { font-size: 12px; color: #9ca3af; }
-        .wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .wrap { max-width: 1300px; margin: 0 auto; padding: 20px; }
 
-        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
-        .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
-        .card .num { font-size: 28px; font-weight: 700; }
-        .card .label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+        .cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
+        .card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); text-align: center; }
+        .card .num { font-size: 24px; font-weight: 700; }
+        .card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
         .card.c-total .num { color: #3b82f6; }
         .card.c-enabled .num { color: #10b981; }
         .card.c-pending .num { color: #f59e0b; }
-        .card.c-disabled .num { color: #ef4444; }
+        .card.c-processing .num { color: #8b5cf6; }
+        .card.c-stuck .num { color: #ef4444; }
+        .card.c-disabled .num { color: #9ca3af; }
 
-        .toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
-        .toolbar input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; width: 180px; }
-        .toolbar input:focus { border-color: #3b82f6; }
+        .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
+        .toolbar input { width: 160px; }
+        .toolbar select { width: 120px; }
+        .toolbar input:focus, .toolbar select:focus { border-color: #3b82f6; }
         .toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; background: #3b82f6; color: #fff; }
         .toolbar button:hover { background: #2563eb; }
+        .toolbar .sep { width: 1px; height: 24px; background: #d1d5db; margin: 0 4px; }
+        .batch-actions { display: none; gap: 6px; align-items: center; }
+        .batch-actions button { font-size: 12px; padding: 6px 12px; }
 
         .box { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f9fafb; padding: 12px 14px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
-        td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+        th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+        td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; }
         tr:hover td { background: #f9fafb; }
         .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
         .tag-on { background: #d1fae5; color: #065f46; }
         .tag-off { background: #fee2e2; color: #991b1b; }
+        .tag-processing { background: #ede9fe; color: #6d28d9; }
         .tag-done { background: #dbeafe; color: #1e40af; }
-        .tag-wait { background: #fef3c7; color: #92400e; }
+        .tag-stuck { background: #fee2e2; color: #991b1b; }
         .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0 2px; }
         .btn-toggle { background: #f59e0b; color: #fff; }
         .btn-toggle:hover { background: #d97706; }
         .btn-del { background: #ef4444; color: #fff; }
         .btn-del:hover { background: #dc2626; }
+        .btn-release { background: #8b5cf6; color: #fff; }
+        .btn-release:hover { background: #7c3aed; }
 
         .pager { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-size: 13px; color: #6b7280; }
         .pager button { padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; }
         .pager button:disabled { opacity: .4; cursor: default; }
         .pager button:hover:not(:disabled) { background: #f3f4f6; }
         .empty { text-align: center; padding: 40px; color: #9ca3af; }
+        .clickable { cursor: pointer; color: #3b82f6; }
+        .clickable:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Executor Dashboard</h1>
-    <span class="ver">v1.0 MVP</span>
+    <span class="ver">v1.1</span>
 </div>
 
 <div class="wrap">
@@ -63,27 +75,52 @@
         <div class="card c-total"><div class="num" id="stat-total">-</div><div class="label">任务总数</div></div>
         <div class="card c-enabled"><div class="num" id="stat-enabled">-</div><div class="label">已启用</div></div>
         <div class="card c-pending"><div class="num" id="stat-pending">-</div><div class="label">待执行</div></div>
+        <div class="card c-processing"><div class="num" id="stat-processing">-</div><div class="label">处理中</div></div>
+        <div class="card c-stuck"><div class="num" id="stat-stuck">-</div><div class="label">卡住(&gt;5min)</div></div>
         <div class="card c-disabled"><div class="num" id="stat-disabled">-</div><div class="label">已禁用</div></div>
     </div>
 
     <div class="toolbar">
-        <input type="text" id="search-task" placeholder="任务名称搜索..." onkeydown="if(event.key==='Enter')search()">
-        <input type="text" id="search-biz" placeholder="业务名称搜索..." onkeydown="if(event.key==='Enter')search()">
+        <input type="text" id="search-task" placeholder="任务名称..." onkeydown="if(event.key==='Enter')search()">
+        <input type="text" id="search-biz" placeholder="bizName..." onkeydown="if(event.key==='Enter')search()">
+        <input type="text" id="search-bizGroup" placeholder="bizGroup..." onkeydown="if(event.key==='Enter')search()">
+        <select id="search-enable" onchange="search()">
+            <option value="">启用状态</option>
+            <option value="1">已启用</option>
+            <option value="0">已禁用</option>
+        </select>
+        <select id="search-process" onchange="search()">
+            <option value="">执行状态</option>
+            <option value="pending">待处理</option>
+            <option value="processing">处理中</option>
+            <option value="stuck">卡住</option>
+            <option value="done">已完成</option>
+        </select>
         <button onclick="search()">查询</button>
         <button onclick="resetSearch()" style="background:#6b7280">重置</button>
+        <span class="sep"></span>
+        <div class="batch-actions" id="batch-actions">
+            <span id="batch-count" style="font-size:13px;color:#6b7280">已选 0 项</span>
+            <button onclick="batchToggle('1')" style="background:#10b981">批量启用</button>
+            <button onclick="batchToggle('0')" style="background:#f59e0b">批量禁用</button>
+            <button onclick="batchDelete()" style="background:#ef4444">批量删除</button>
+            <button onclick="batchRelease()" style="background:#8b5cf6">批量释放</button>
+        </div>
     </div>
 
     <div class="box">
         <table>
             <thead>
                 <tr>
+                    <th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
                     <th>任务ID</th>
                     <th>任务名</th>
                     <th>bizName</th>
                     <th>bizGroup</th>
-                    <th>Cron / 调度配置</th>
+                    <th>调度配置</th>
                     <th>下次触发</th>
-                    <th>状态</th>
+                    <th>启用</th>
+                    <th>执行状态</th>
                     <th>操作</th>
                 </tr>
             </thead>
@@ -102,6 +139,7 @@
 
 <script>
 let page = 1, size = 20, totalPages = 0;
+let selectedIds = new Set();
 
 function loadStats() {
     fetch('/dashboard/stats')
@@ -110,16 +148,24 @@ function loadStats() {
             document.getElementById('stat-total').textContent = d.total;
             document.getElementById('stat-enabled').textContent = d.enabled;
             document.getElementById('stat-pending').textContent = d.pending;
+            document.getElementById('stat-processing').textContent = d.processing;
+            document.getElementById('stat-stuck').textContent = d.stuck;
             document.getElementById('stat-disabled').textContent = d.disabled;
         });
 }
 
 function loadTasks() {
+    let params = new URLSearchParams({ page, size });
     let taskName = document.getElementById('search-task').value.trim();
     let bizName = document.getElementById('search-biz').value.trim();
-    let params = new URLSearchParams({ page, size });
+    let bizGroup = document.getElementById('search-bizGroup').value.trim();
+    let enable = document.getElementById('search-enable').value;
+    let process = document.getElementById('search-process').value;
     if (taskName) params.set('taskName', taskName);
     if (bizName) params.set('bizName', bizName);
+    if (bizGroup) params.set('bizGroup', bizGroup);
+    if (enable) params.set('enable', enable);
+    if (process) params.set('process', process);
 
     fetch('/dashboard/tasks?' + params)
         .then(r => r.json())
@@ -131,57 +177,133 @@ function loadTasks() {
 
             let tbody = document.getElementById('tbody');
             if (!d.list || d.list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="empty">暂无数据</td></tr>';
                 return;
             }
+            selectedIds.clear();
+            document.getElementById('select-all').checked = false;
+            updateBatchBar();
             tbody.innerHTML = d.list.map(t => {
-                let processTag = '';
-                if (t.process === 'processing') processTag = '<span class="tag tag-wait">处理中</span>';
-                else if (t.process === 'done') processTag = '<span class="tag tag-done">完成</span>';
-                else processTag = '<span class="tag tag-wait">待处理</span>';
-
                 let timeStr = t.nextTriggerTime ? new Date(t.nextTriggerTime).toLocaleString('zh-CN') : '-';
                 let enableTag = t.enable === '1'
                     ? '<span class="tag tag-on">启用</span>'
                     : '<span class="tag tag-off">禁用</span>';
                 let toggleText = t.enable === '1' ? '禁用' : '启用';
 
+                let processTag = '';
+                if (t.process === 'processing') {
+                    processTag = '<span class="tag tag-processing">处理中</span>';
+                } else if (t.process === 'done') {
+                    processTag = '<span class="tag tag-done">已完成</span>';
+                } else {
+                    processTag = '<span class="tag" style="background:#f3f4f6;color:#9ca3af">待处理</span>';
+                }
+
+                let sid = escAttr(t.id);
                 return '<tr>'
-                    + '<td title="' + t.id + '">' + (t.id.length > 20 ? t.id.substring(0, 20) + '...' : t.id) + '</td>'
+                    + '<td><input type="checkbox" class="row-check" value="' + sid + '" onchange="onCheck(this)"></td>'
+                    + '<td class="clickable" title="' + sid + '" onclick="showDetail(\'' + sid + '\')">' + (t.id.length > 16 ? t.id.substring(0, 16) + '...' : t.id) + '</td>'
                     + '<td>' + esc(t.taskName) + '</td>'
                     + '<td>' + esc(t.bizName) + '</td>'
                     + '<td>' + esc(t.bizGroup) + '</td>'
-                    + '<td>' + (t.scheduledConf || '一次性') + '</td>'
-                    + '<td>' + timeStr + '</td>'
-                    + '<td>' + enableTag + ' ' + processTag + '</td>'
+                    + '<td style="font-size:12px">' + (t.scheduledConf || '一次性') + '</td>'
+                    + '<td style="font-size:12px">' + timeStr + '</td>'
+                    + '<td>' + enableTag + '</td>'
+                    + '<td>' + processTag + '</td>'
                     + '<td>'
-                    + '<button class="btn-sm btn-toggle" onclick="toggleEnable(\'' + t.id + '\')">' + toggleText + '</button>'
-                    + '<button class="btn-sm btn-del" onclick="delTask(\'' + t.id + '\')">删除</button>'
+                    + '<button class="btn-sm btn-toggle" onclick="toggleEnable(\'' + sid + '\')">' + toggleText + '</button>'
+                    + (t.process === 'processing' ? '<button class="btn-sm btn-release" onclick="releaseTask(\'' + sid + '\')">释放</button>' : '')
+                    + '<button class="btn-sm btn-del" onclick="delTask(\'' + sid + '\')">删除</button>'
                     + '</td>'
                     + '</tr>';
             }).join('');
         });
 }
 
+function onCheck(cb) {
+    if (cb.checked) selectedIds.add(cb.value); else selectedIds.delete(cb.value);
+    updateBatchBar();
+}
+
+function toggleSelectAll() {
+    let checked = document.getElementById('select-all').checked;
+    document.querySelectorAll('.row-check').forEach(cb => {
+        cb.checked = checked;
+        if (checked) selectedIds.add(cb.value); else selectedIds.delete(cb.value);
+    });
+    updateBatchBar();
+}
+
+function updateBatchBar() {
+    let bar = document.getElementById('batch-actions');
+    let count = selectedIds.size;
+    bar.style.display = count > 0 ? 'flex' : 'none';
+    document.getElementById('batch-count').textContent = '已选 ' + count + ' 项';
+}
+
+function batchToggle(enable) {
+    if (selectedIds.size === 0) return;
+    fetch('/dashboard/tasks/batch/toggle', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: Array.from(selectedIds), enable: enable})
+    }).then(r => r.json()).then(d => { if (d.success) refresh(); else alert('操作失败'); });
+}
+
+function batchDelete() {
+    if (selectedIds.size === 0) return;
+    if (!confirm('确认删除选中的 ' + selectedIds.size + ' 个任务？')) return;
+    fetch('/dashboard/tasks/batch/delete', {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: Array.from(selectedIds)})
+    }).then(r => r.json()).then(d => { if (d.success) refresh(); else alert('删除失败'); });
+}
+
+function batchRelease() {
+    if (selectedIds.size === 0) return;
+    fetch('/dashboard/tasks/batch/release', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ids: Array.from(selectedIds)})
+    }).then(r => r.json()).then(d => { if (d.success) refresh(); else alert('释放失败'); });
+}
+
 function refresh() { loadStats(); loadTasks(); }
 
 function search() { page = 1; loadTasks(); }
-function resetSearch() { document.getElementById('search-task').value = ''; document.getElementById('search-biz').value = ''; page = 1; loadTasks(); }
+function resetSearch() {
+    document.getElementById('search-task').value = '';
+    document.getElementById('search-biz').value = '';
+    document.getElementById('search-bizGroup').value = '';
+    document.getElementById('search-enable').value = '';
+    document.getElementById('search-process').value = '';
+    page = 1; loadTasks();
+}
 function prevPage() { if (page > 1) { page--; loadTasks(); } }
 function nextPage() { if (page < totalPages) { page++; loadTasks(); } }
 
 function toggleEnable(id) {
-    fetch('/dashboard/tasks/' + id + '/toggle', { method: 'PUT' })
+    fetch('/dashboard/tasks/' + encodeURIComponent(id) + '/toggle', { method: 'PUT' })
         .then(r => r.json())
         .then(d => { if (d.success) refresh(); else alert('操作失败'); });
 }
+function releaseTask(id) {
+    fetch('/dashboard/tasks/' + encodeURIComponent(id) + '/release', { method: 'PUT' })
+        .then(r => r.json())
+        .then(d => { if (d.success) refresh(); else alert('释放失败'); });
+}
 function delTask(id) {
     if (!confirm('确认删除该任务？')) return;
-    fetch('/dashboard/tasks/' + id, { method: 'DELETE' })
+    fetch('/dashboard/tasks/' + encodeURIComponent(id), { method: 'DELETE' })
         .then(r => r.json())
         .then(d => { if (d.success) refresh(); else alert('删除失败'); });
 }
+function showDetail(id) {
+    alert('任务ID: ' + id + '\n详情功能开发中...');
+}
 function esc(s) { return s ? s.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
+function escAttr(s) { return s ? s.replace(/'/g, "\\'").replace(/"/g, '&quot;') : ''; }
 
 refresh();
 </script>
