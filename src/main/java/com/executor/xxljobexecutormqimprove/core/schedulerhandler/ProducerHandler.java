@@ -71,13 +71,17 @@ public class ProducerHandler {
                 produceCommonTaskMessageList = commonTaskBaseService.lockAndSelectTasksByShard(bizName,bizGroup, now,LIMIT_COUNT,shardTotal,shardIndex);
             }
 
-            if (produceCommonTaskMessageList.isEmpty()) return ;
+            if (produceCommonTaskMessageList.isEmpty()) {
+                transactionManager.rollback(status);
+                return;
+            }
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
             commonTaskBaseService.lockTaskById(ids);
             transactionManager.commit(status);
             logger.info("锁定事务成功");
         }catch (Exception e){
-            logger.error("数据库事务添加错误{}",e.getMessage());
+            transactionManager.rollback(status);
+            logger.error("数据库事务添加错误", e);
             throw e;
         }
 
