@@ -38,7 +38,9 @@ public class Processor implements MessageHandler {
     private CommonTaskEntity transFormat(ProcessCommonTaskDTO dto) {
         CommonTaskEntity entity = new CommonTaskEntity();
 
-        entity.setId(System.currentTimeMillis() + "-" + ThreadLocalRandom.current().nextInt(1000, 9999));
+        String generatedId = System.currentTimeMillis() + "-" + ThreadLocalRandom.current().nextInt(1000, 9999);
+        entity.setId(generatedId);
+        entity.setTaskId(generatedId);
         entity.setTaskName(dto.getTaskName());
         entity.setBizName(dto.getBizName());
         entity.setBizGroup(dto.getBizGroup());

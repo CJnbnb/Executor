@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class CommonTaskEntity {
     private String id;
+    private String taskId;
     private String taskName;
     private String bizName;
     private String bizGroup;
