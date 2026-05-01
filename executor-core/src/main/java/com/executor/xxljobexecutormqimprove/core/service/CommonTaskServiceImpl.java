@@ -23,55 +23,44 @@ public class CommonTaskServiceImpl implements CommonTaskService{
     private Logger logger = LoggerFactory.getLogger(CommonTaskServiceImpl.class);
 
     @Override
-    public boolean changeTaskInfo(ProduceCommonTaskMessage produceCommonTaskMessage) {
-        Long lastTriggerTime = produceCommonTaskMessage.getNextTriggerTime();
-        Long nextTriggerTime = null;
-        String enable = TaskEnableEnum.TASK_ENABLE;
-        if (produceCommonTaskMessage.getScheduledType().equals(ScheduledTypeEnum.SCHEDULED_CRON)){
-            try {
-                nextTriggerTime = CronTimeUtil.getNextTriggerTime(produceCommonTaskMessage.getScheduledConf(),System.currentTimeMillis());
-            }catch (Exception e){
-                logger.error("Cron解析失败，1分钟后重试", e);
-                nextTriggerTime = System.currentTimeMillis() + 60_000;
-            }
-        }else {
-            enable = TaskEnableEnum.TASK_UNABLE;
-        }
-
-        ChangeTaskInfoDTO changeTaskInfoDTO = new ChangeTaskInfoDTO();
-        changeTaskInfoDTO.setId(produceCommonTaskMessage.getId());
-        changeTaskInfoDTO.setNextTriggerTime(nextTriggerTime);
-        changeTaskInfoDTO.setLastTriggerTime(lastTriggerTime);
-        changeTaskInfoDTO.setEnable(enable);
-        return taskStore.updateTaskTriggerInfo(changeTaskInfoDTO);
-
+    public boolean changeTaskInfo(ProduceCommonTaskMessage task) {
+        ChangeTaskInfoDTO dto = buildChangeTaskInfoDTO(task);
+        return taskStore.updateTaskTriggerInfo(dto);
     }
 
     public void batchChangeTaskInfo(List<ProduceCommonTaskMessage> produceCommonTaskMessageList) {
         if (produceCommonTaskMessageList == null || produceCommonTaskMessageList.isEmpty()) return;
-        // 转换为DTO列表
         List<ChangeTaskInfoDTO> dtoList = new ArrayList<>();
         for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-            ChangeTaskInfoDTO dto = new ChangeTaskInfoDTO();
-            Long lastTriggerTime = task.getNextTriggerTime();
-            Long nextTriggerTime = null;
-            String enable = TaskEnableEnum.TASK_ENABLE;
-            if (task.getScheduledType().equals(ScheduledTypeEnum.SCHEDULED_CRON)){
-                try {
-                    nextTriggerTime = CronTimeUtil.getNextTriggerTime(task.getScheduledConf(),System.currentTimeMillis());
-                }catch (Exception e){
-                    logger.error("Cron解析失败(批量)，1分钟后重试", e);
-                    nextTriggerTime = System.currentTimeMillis() + 60_000;
-                }
-            }else {
-                enable = TaskEnableEnum.TASK_UNABLE;
-            }
-            dto.setId(task.getId());
-            dto.setLastTriggerTime(task.getNextTriggerTime());
-            dto.setNextTriggerTime(nextTriggerTime);
-            dto.setEnable(enable);
-            dtoList.add(dto);
+            dtoList.add(buildChangeTaskInfoDTO(task));
         }
         taskStore.batchUpdateTaskTriggerInfo(dtoList);
+    }
+
+    private ChangeTaskInfoDTO buildChangeTaskInfoDTO(ProduceCommonTaskMessage task) {
+        ChangeTaskInfoDTO dto = new ChangeTaskInfoDTO();
+        dto.setId(task.getId());
+        dto.setLastTriggerTime(task.getNextTriggerTime());
+
+        if (ScheduledTypeEnum.SCHEDULED_CRON.equals(task.getScheduledType())) {
+            try {
+                long next = CronTimeUtil.getNextTriggerTime(task.getScheduledConf(), System.currentTimeMillis());
+                if (next < 0) {
+                    // Cron 表达式没有未来匹配时间（已过期），禁用任务
+                    logger.warn("Cron表达式已过期，禁用任务: taskId={}, cron={}", task.getId(), task.getScheduledConf());
+                    dto.setEnable(TaskEnableEnum.TASK_UNABLE);
+                } else {
+                    dto.setNextTriggerTime(next);
+                    dto.setEnable(TaskEnableEnum.TASK_ENABLE);
+                }
+            } catch (Exception e) {
+                logger.error("Cron解析失败，1分钟后重试: taskId={}", task.getId(), e);
+                dto.setNextTriggerTime(System.currentTimeMillis() + 60_000);
+                dto.setEnable(TaskEnableEnum.TASK_ENABLE);
+            }
+        } else {
+            dto.setEnable(TaskEnableEnum.TASK_UNABLE);
+        }
+        return dto;
     }
 }
