@@ -42,11 +42,31 @@ mvn spring-boot:run
 | `executor-core` | 调度引擎 + Dashboard，Spring Boot 应用 |
 | `executor-example` | SDK 使用示例 |
 
+## 核心概念
+
+### bizName 与 bizGroup
+
+`bizName`（业务线）和 `bizGroup`（业务分组）是任务调度路由的两个关键标识，**SDK 注册的值必须与 XXL-Job Admin 任务参数完全一致**：
+
+```
+SDK:  .biz("order", "daily_report")
+  →  DB: biz_name='order', biz_group='daily_report'
+  →  XXL-Job Admin 任务参数: order,daily_report
+  →  ProducerHandler: WHERE biz_name='order' AND biz_group='daily_report'
+```
+
+- `bizName` — 业务线名称（如 order、user、payment），建议按业务域划分
+- `bizGroup` — 业务线内的分组（如 daily_report、cleanup、export），按功能细分
+- **两者必须**: SDK 注册时传入 + XXL-Job Admin 配置对应的调度任务，缺一任务永远不会执行
+
+> 可以为不同 bizName/bizGroup 组合在 XXL-Job Admin 中创建多个调度任务，实现分组隔离、独立 Cron、独立分片。
+
 ## 业务方接入
 
 ```java
 @Autowired private ExecutorSdkClient sdkClient;
 
+// bizName 和 bizGroup 必须与 XXL-Job Admin 中的任务参数一致
 sdkClient.newTask()
     .biz("order", "daily_report")
     .taskName("每日订单汇总")

@@ -24,4 +24,8 @@ public interface TaskStore {
     void batchUpdateTaskTriggerInfo(List<ChangeTaskInfoDTO> list);
 
     int deleteDisabledTasks();
+
+    int releaseStaleProcessing(int stuckMinutes);
+
+    int deleteStaleEnabled(int staleDays);
 }

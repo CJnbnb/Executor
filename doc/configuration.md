@@ -96,7 +96,20 @@ xxl.job.process.secret-key=your_secret
 
 ## 4. XXL-Job Admin 调度配置
 
-在 XXL-Job Admin 控制台中为 executor-core 创建任务：
+在 XXL-Job Admin 控制台中为 executor-core 创建调度任务。**这是任务能被执行的关键环节**——没有匹配的调度任务，SDK 注册的任务永远不会被扫描和执行。
+
+### 任务参数与路由机制
+
+SDK 注册任务时通过 `.biz(bizName, bizGroup)` 指定业务归属，ProducerHandler 通过 XXL-Job 的**任务参数**决定扫描哪些任务：
+
+```
+XXL-Job Admin 任务参数 → ProducerHandler 解析为 bizName + bizGroup
+                     → SQL: WHERE biz_name=? AND biz_group=?
+```
+
+**两者必须完全一致**（字符级匹配）。如果不一致，任务会一直待在 DB 中不被执行。
+
+### 任务配置模板
 
 | 字段 | 值 |
 |------|-----|
@@ -106,3 +119,24 @@ xxl.job.process.secret-key=your_secret
 | Cron | `0/5 * * * * ?`（每5秒扫描一次）|
 | 任务参数 | `bizName,bizGroup`（如 `order,daily_report`）|
 | 路由策略 | 分片广播 |
+
+### 多租户调度隔离
+
+为不同 bizName/bizGroup 分别创建 XXL-Job 任务，可实现：
+- **独立扫描频率**: 高频任务用 `0/3 * * * * ?`，低频用 `0/30 * * * * ?`
+- **独立分片并行**: 每个组合可以有自己的分片策略
+- **故障隔离**: 一个分组的任务积压不影响其他分组
+
+```text
+XXL-Job 任务1: 参数="order,daily_report"  Cron="0/5 * * * * ?"
+XXL-Job 任务2: 参数="order,export"        Cron="0/30 * * * * ?"  
+XXL-Job 任务3: 参数="user,cleanup"        Cron="0 0 2 * * ?"
+```
+
+### 常见配置错误
+
+| 问题 | 原因 | 解决 |
+|------|------|------|
+| 任务注册后一直 pending | XXL-Job Admin 未创建对应 bizName,bizGroup 的调度任务 | 创建匹配的调度任务 |
+| 部分任务不执行 | SDK 的 `.biz()` 值与 Admin 任务参数不匹配（大小写、空格） | 确保两端字符串完全一致 |
+| 参数格式错误 | 任务参数不是 `xxx,yyy` 格式 | 格式必须是 `bizName,bizGroup`，不能多也不能少 |

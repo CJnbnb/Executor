@@ -36,4 +36,8 @@ public interface CommonTaskMapper {
     boolean updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
     void batchUpdateTaskTriggerInfo(@Param("list") List<ChangeTaskInfoDTO> list);
     int deleteDisabledTasks();
+
+    int releaseStaleProcessing(@Param("stuckMinutes") int stuckMinutes);
+
+    int deleteStaleEnabled(@Param("threshold") long threshold);
 }

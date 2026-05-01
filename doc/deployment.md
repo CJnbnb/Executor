@@ -72,6 +72,13 @@ java -jar target/executor-core-0.0.1-SNAPSHOT.jar
 
 ## 7. 创建调度任务
 
+**关键理解**: SDK 注册任务时指定了 `bizName` 和 `bizGroup`，XXL-Job Admin 的任务参数决定扫描哪些组合。**两端必须完全一致**，否则任务注册了也不会执行。
+
+```
+SDK 端:   .biz("order", "daily_report")  →  DB: biz_name='order', biz_group='daily_report'
+Admin 端: 任务参数 = "order,daily_report" →  ProducerHandler: WHERE biz_name='order' AND biz_group='daily_report'
+```
+
 在 XXL-Job Admin 中创建任务：
 
 | 配置项 | 值 |
@@ -80,10 +87,10 @@ java -jar target/executor-core-0.0.1-SNAPSHOT.jar
 | JobHandler | `Executor` |
 | 调度类型 | CRON |
 | Cron | `0/5 * * * * ?` |
-| 任务参数 | `bizName,bizGroup` |
+| 任务参数 | `bizName,bizGroup`（如 `order,daily_report`）|
 | 路由策略 | 分片广播 |
 
-> 可以为不同的 bizName/bizGroup 组合创建多个调度任务，实现分组隔离调度。
+> 可以为不同 bizName/bizGroup 组合创建多个调度任务，实现分组隔离调度、独立 Cron 频率和独立分片策略。
 
 ## 8. 业务方接入
 

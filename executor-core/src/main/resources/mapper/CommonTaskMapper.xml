@@ -82,7 +82,21 @@
         </foreach>
     </update>
 
-    <!-- CommonTaskMapper.xml -->
+    <update id="releaseStaleProcessing">
+        UPDATE user_scheduled_common_task
+        SET process = NULL, update_at = NOW()
+        WHERE process = 'processing'
+          AND update_at &lt; DATE_SUB(NOW(), INTERVAL #{stuckMinutes} MINUTE)
+    </update>
+
+    <delete id="deleteStaleEnabled">
+        DELETE FROM user_scheduled_common_task
+        WHERE enable = '1'
+          AND next_trigger_time IS NOT NULL
+          AND next_trigger_time &lt; #{threshold}
+          AND (process IS NULL OR process = 'done')
+    </delete>
+
     <delete id="deleteDisabledTasks">
         DELETE FROM user_scheduled_common_task WHERE enable = '0'
     </delete>

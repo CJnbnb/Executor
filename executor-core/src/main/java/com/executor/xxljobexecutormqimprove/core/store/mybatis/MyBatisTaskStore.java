@@ -56,4 +56,15 @@ public class MyBatisTaskStore implements TaskStore {
     public int deleteDisabledTasks() {
         return mapper.deleteDisabledTasks();
     }
+
+    @Override
+    public int releaseStaleProcessing(int stuckMinutes) {
+        return mapper.releaseStaleProcessing(stuckMinutes);
+    }
+
+    @Override
+    public int deleteStaleEnabled(int staleDays) {
+        long threshold = System.currentTimeMillis() - (long) staleDays * 24 * 3600 * 1000;
+        return mapper.deleteStaleEnabled(threshold);
+    }
 }
