@@ -32,11 +32,23 @@ public class DashboardService {
         return 0L;
     }
 
+    private static final java.util.Set<String> ALLOWED_SORT_COLUMNS = java.util.Set.of(
+            "task_name", "biz_name", "biz_group", "next_trigger_time", "create_at", "update_at"
+    );
+
     public Map<String, Object> tasks(int page, int size, String taskName, String bizName,
-                                      String bizGroup, String enable, String process) {
+                                      String bizGroup, String enable, String process,
+                                      String sortBy, String sortDir) {
+        if (sortBy != null && !ALLOWED_SORT_COLUMNS.contains(sortBy)) {
+            sortBy = null;
+            sortDir = null;
+        }
+        if (!"asc".equalsIgnoreCase(sortDir) && !"desc".equalsIgnoreCase(sortDir)) {
+            sortDir = null;
+        }
         int offset = (page - 1) * size;
         List<CommonTaskEntity> list = dashboardStore.selectTasksPage(offset, size,
-                taskName, bizName, bizGroup, enable, process);
+                taskName, bizName, bizGroup, enable, process, sortBy, sortDir);
         long total = dashboardStore.countTasks(taskName, bizName, bizGroup, enable, process);
         Map<String, Object> result = new HashMap<>();
         result.put("list", list);
@@ -69,5 +81,9 @@ public class DashboardService {
 
     public boolean batchReleaseTasks(List<String> ids) {
         return dashboardStore.batchReleaseTasks(ids) > 0;
+    }
+
+    public CommonTaskEntity getTaskById(String id) {
+        return dashboardStore.getTaskById(id);
     }
 }

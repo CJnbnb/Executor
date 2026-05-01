@@ -1,6 +1,8 @@
 package com.executor.xxljobexecutormqimprove.dashboard.controller;
 
 import com.executor.xxljobexecutormqimprove.dashboard.service.DashboardService;
+import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.metrics.MetricsCollector;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +16,9 @@ public class DashboardController {
     @Autowired
     private DashboardService dashboardService;
 
+    @Autowired
+    private MetricsCollector metricsCollector;
+
     @GetMapping("/stats")
     public Map<String, Object> stats() {
         return dashboardService.stats();
@@ -26,8 +31,19 @@ public class DashboardController {
                                      @RequestParam(required = false) String bizName,
                                      @RequestParam(required = false) String bizGroup,
                                      @RequestParam(required = false) String enable,
-                                     @RequestParam(required = false) String process) {
-        return dashboardService.tasks(page, size, taskName, bizName, bizGroup, enable, process);
+                                     @RequestParam(required = false) String process,
+                                     @RequestParam(required = false) String sortBy,
+                                     @RequestParam(required = false) String sortDir) {
+        return dashboardService.tasks(page, size, taskName, bizName, bizGroup, enable, process, sortBy, sortDir);
+    }
+
+    @GetMapping("/tasks/{id}")
+    public Map<String, Object> getTaskDetail(@PathVariable String id) {
+        CommonTaskEntity task = dashboardService.getTaskById(id);
+        if (task == null) {
+            return Map.of("success", false, "error", "Task not found");
+        }
+        return Map.of("success", true, "data", task);
     }
 
     @PutMapping("/tasks/{id}/toggle")
@@ -71,5 +87,10 @@ public class DashboardController {
         List<String> ids = (List<String>) body.get("ids");
         boolean ok = dashboardService.batchDelete(ids);
         return Map.of("success", ok);
+    }
+
+    @GetMapping("/metrics")
+    public Map<String, Long> metrics() {
+        return metricsCollector.snapshot();
     }
 }

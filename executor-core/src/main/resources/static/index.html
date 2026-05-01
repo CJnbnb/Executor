@@ -22,6 +22,8 @@
         .card.c-processing .num { color: #8b5cf6; }
         .card.c-stuck .num { color: #ef4444; }
         .card.c-disabled .num { color: #9ca3af; }
+        .card .num.loading { color: #d1d5db !important; font-size: 18px; }
+        .card .num.error { color: #ef4444 !important; font-size: 14px; }
 
         .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
         .toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
@@ -30,13 +32,19 @@
         .toolbar input:focus, .toolbar select:focus { border-color: #3b82f6; }
         .toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; background: #3b82f6; color: #fff; }
         .toolbar button:hover { background: #2563eb; }
+        .toolbar button:disabled { opacity: .5; cursor: default; }
         .toolbar .sep { width: 1px; height: 24px; background: #d1d5db; margin: 0 4px; }
         .batch-actions { display: none; gap: 6px; align-items: center; }
         .batch-actions button { font-size: 12px; padding: 6px 12px; }
+        .btn-auto { background: #059669 !important; }
+        .btn-auto.off { background: #6b7280 !important; }
 
         .box { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
+        th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; user-select: none; }
+        th.sortable { cursor: pointer; }
+        th.sortable:hover { background: #f3f4f6; }
+        th .sort-arrow { margin-left: 4px; font-size: 11px; }
         td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; }
         tr:hover td { background: #f9fafb; }
         .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
@@ -46,12 +54,13 @@
         .tag-done { background: #dbeafe; color: #1e40af; }
         .tag-stuck { background: #fee2e2; color: #991b1b; }
         .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0 2px; }
+        .btn-sm:disabled { opacity: .5; cursor: default; }
         .btn-toggle { background: #f59e0b; color: #fff; }
-        .btn-toggle:hover { background: #d97706; }
+        .btn-toggle:hover:not(:disabled) { background: #d97706; }
         .btn-del { background: #ef4444; color: #fff; }
-        .btn-del:hover { background: #dc2626; }
+        .btn-del:hover:not(:disabled) { background: #dc2626; }
         .btn-release { background: #8b5cf6; color: #fff; }
-        .btn-release:hover { background: #7c3aed; }
+        .btn-release:hover:not(:disabled) { background: #7c3aed; }
 
         .pager { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-size: 13px; color: #6b7280; }
         .pager button { padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; }
@@ -60,13 +69,32 @@
         .empty { text-align: center; padding: 40px; color: #9ca3af; }
         .clickable { cursor: pointer; color: #3b82f6; }
         .clickable:hover { text-decoration: underline; }
+
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #fff; border-radius: 10px; width: 560px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,.18); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
+        .modal-header h3 { font-size: 16px; }
+        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #9ca3af; padding: 4px 8px; }
+        .modal-close:hover { color: #1f2937; }
+        .modal-body { padding: 16px 20px; }
+        .modal-body .kv { display: flex; margin-bottom: 10px; font-size: 13px; }
+        .modal-body .kv .k { width: 110px; color: #6b7280; flex-shrink: 0; }
+        .modal-body .kv .v { color: #1f2937; word-break: break-all; }
+        .modal-body .kv .v code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow-y: auto; display: block; white-space: pre-wrap; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid #e5e7eb; text-align: right; }
+
+        .toast { position: fixed; top: 20px; right: 20px; z-index: 2000; background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .toast.error { background: #ef4444; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Executor Dashboard</h1>
-    <span class="ver">v1.1</span>
+    <span class="ver">v1.2</span>
 </div>
 
 <div class="wrap">
@@ -98,6 +126,7 @@
         </select>
         <button onclick="search()">查询</button>
         <button onclick="resetSearch()" style="background:#6b7280">重置</button>
+        <button onclick="refresh()" style="background:#6b7280">刷新</button>
         <span class="sep"></span>
         <div class="batch-actions" id="batch-actions">
             <span id="batch-count" style="font-size:13px;color:#6b7280">已选 0 项</span>
@@ -106,6 +135,8 @@
             <button onclick="batchDelete()" style="background:#ef4444">批量删除</button>
             <button onclick="batchRelease()" style="background:#8b5cf6">批量释放</button>
         </div>
+        <button id="btn-auto-refresh" class="btn-auto off" onclick="toggleAutoRefresh()">自动刷新: 关</button>
+        <button onclick="exportCSV()" style="background:#059669">导出 CSV</button>
     </div>
 
     <div class="box">
@@ -115,10 +146,10 @@
                     <th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll()"></th>
                     <th>任务ID</th>
                     <th>任务名</th>
-                    <th>bizName</th>
-                    <th>bizGroup</th>
+                    <th class="sortable" onclick="setSort('biz_name')">bizName <span class="sort-arrow" id="arrow-biz_name"></span></th>
+                    <th class="sortable" onclick="setSort('biz_group')">bizGroup <span class="sort-arrow" id="arrow-biz_group"></span></th>
                     <th>调度配置</th>
-                    <th>下次触发</th>
+                    <th class="sortable" onclick="setSort('next_trigger_time')">下次触发 <span class="sort-arrow" id="arrow-next_trigger_time"></span></th>
                     <th>启用</th>
                     <th>执行状态</th>
                     <th>操作</th>
@@ -137,11 +168,32 @@
 
 </div>
 
+<!-- Task Detail Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>任务详情</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer">
+            <button onclick="closeModal()" style="padding:6px 16px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:13px">关闭</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script>
 let page = 1, size = 20, totalPages = 0;
 let selectedIds = new Set();
+let autoRefresh = false, autoRefreshInterval = null;
+let busy = false;
+let sortBy = '', sortDir = '';
 
 function loadStats() {
+    let ids = ['total','enabled','pending','processing','stuck','disabled'];
+    ids.forEach(id => document.getElementById('stat-' + id).textContent = '...');
     fetch('/dashboard/stats')
         .then(r => r.json())
         .then(d => {
@@ -151,10 +203,20 @@ function loadStats() {
             document.getElementById('stat-processing').textContent = d.processing;
             document.getElementById('stat-stuck').textContent = d.stuck;
             document.getElementById('stat-disabled').textContent = d.disabled;
+        })
+        .catch(() => {
+            ids.forEach(id => {
+                document.getElementById('stat-' + id).textContent = 'ERR';
+                document.getElementById('stat-' + id).className = 'num error';
+            });
         });
 }
 
 function loadTasks() {
+    if (busy) return;
+    busy = true;
+    document.getElementById('tbody').innerHTML = '<tr><td colspan="10" class="empty">加载中...</td></tr>';
+
     let params = new URLSearchParams({ page, size });
     let taskName = document.getElementById('search-task').value.trim();
     let bizName = document.getElementById('search-biz').value.trim();
@@ -166,10 +228,12 @@ function loadTasks() {
     if (bizGroup) params.set('bizGroup', bizGroup);
     if (enable) params.set('enable', enable);
     if (process) params.set('process', process);
+    if (sortBy) { params.set('sortBy', sortBy); params.set('sortDir', sortDir); }
 
     fetch('/dashboard/tasks?' + params)
         .then(r => r.json())
         .then(d => {
+            busy = false;
             totalPages = d.totalPages;
             document.getElementById('pager-info').textContent = '共 ' + d.total + ' 条，第 ' + page + '/' + Math.max(totalPages, 1) + ' 页';
             document.getElementById('btn-prev').disabled = page <= 1;
@@ -217,6 +281,11 @@ function loadTasks() {
                     + '</td>'
                     + '</tr>';
             }).join('');
+            updateSortArrows();
+        })
+        .catch(err => {
+            busy = false;
+            document.getElementById('tbody').innerHTML = '<tr><td colspan="10" class="empty" style="color:#ef4444">加载失败: ' + esc('' + err) + '</td></tr>';
         });
 }
 
@@ -242,31 +311,37 @@ function updateBatchBar() {
 }
 
 function batchToggle(enable) {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0 || busy) return;
+    busy = true;
     fetch('/dashboard/tasks/batch/toggle', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ids: Array.from(selectedIds), enable: enable})
-    }).then(r => r.json()).then(d => { if (d.success) refresh(); else alert('操作失败'); });
+    }).then(r => r.json()).then(d => { busy = false; if (d.success) refresh(); else toast('操作失败', true); })
+      .catch(() => { busy = false; toast('操作失败', true); });
 }
 
 function batchDelete() {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0 || busy) return;
     if (!confirm('确认删除选中的 ' + selectedIds.size + ' 个任务？')) return;
+    busy = true;
     fetch('/dashboard/tasks/batch/delete', {
         method: 'DELETE',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ids: Array.from(selectedIds)})
-    }).then(r => r.json()).then(d => { if (d.success) refresh(); else alert('删除失败'); });
+    }).then(r => r.json()).then(d => { busy = false; if (d.success) refresh(); else toast('删除失败', true); })
+      .catch(() => { busy = false; toast('删除失败', true); });
 }
 
 function batchRelease() {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0 || busy) return;
+    busy = true;
     fetch('/dashboard/tasks/batch/release', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ids: Array.from(selectedIds)})
-    }).then(r => r.json()).then(d => { if (d.success) refresh(); else alert('释放失败'); });
+    }).then(r => r.json()).then(d => { busy = false; if (d.success) refresh(); else toast('释放失败', true); })
+      .catch(() => { busy = false; toast('释放失败', true); });
 }
 
 function refresh() { loadStats(); loadTasks(); }
@@ -278,30 +353,165 @@ function resetSearch() {
     document.getElementById('search-bizGroup').value = '';
     document.getElementById('search-enable').value = '';
     document.getElementById('search-process').value = '';
+    sortBy = ''; sortDir = '';
     page = 1; loadTasks();
 }
-function prevPage() { if (page > 1) { page--; loadTasks(); } }
-function nextPage() { if (page < totalPages) { page++; loadTasks(); } }
+function prevPage() { if (page > 1 && !busy) { page--; loadTasks(); } }
+function nextPage() { if (page < totalPages && !busy) { page++; loadTasks(); } }
 
 function toggleEnable(id) {
+    if (busy) return;
+    busy = true;
     fetch('/dashboard/tasks/' + encodeURIComponent(id) + '/toggle', { method: 'PUT' })
         .then(r => r.json())
-        .then(d => { if (d.success) refresh(); else alert('操作失败'); });
+        .then(d => { busy = false; if (d.success) refresh(); else toast('操作失败', true); })
+        .catch(() => { busy = false; toast('操作失败', true); });
 }
 function releaseTask(id) {
+    if (busy) return;
+    busy = true;
     fetch('/dashboard/tasks/' + encodeURIComponent(id) + '/release', { method: 'PUT' })
         .then(r => r.json())
-        .then(d => { if (d.success) refresh(); else alert('释放失败'); });
+        .then(d => { busy = false; if (d.success) refresh(); else toast('释放失败', true); })
+        .catch(() => { busy = false; toast('释放失败', true); });
 }
 function delTask(id) {
+    if (busy) return;
     if (!confirm('确认删除该任务？')) return;
+    busy = true;
     fetch('/dashboard/tasks/' + encodeURIComponent(id), { method: 'DELETE' })
         .then(r => r.json())
-        .then(d => { if (d.success) refresh(); else alert('删除失败'); });
+        .then(d => { busy = false; if (d.success) refresh(); else toast('删除失败', true); })
+        .catch(() => { busy = false; toast('删除失败', true); });
 }
+
 function showDetail(id) {
-    alert('任务ID: ' + id + '\n详情功能开发中...');
+    document.getElementById('modal-body').innerHTML = '<div class="empty">加载中...</div>';
+    document.getElementById('modal-overlay').classList.add('show');
+    fetch('/dashboard/tasks/' + encodeURIComponent(id))
+        .then(r => r.json())
+        .then(d => {
+            if (!d.success || !d.data) {
+                document.getElementById('modal-body').innerHTML = '<div class="empty" style="color:#ef4444">加载失败</div>';
+                return;
+            }
+            let t = d.data;
+            let rows = [
+                ['任务 ID', t.id],
+                ['任务名', t.taskName],
+                ['bizName', t.bizName],
+                ['bizGroup', t.bizGroup],
+                ['调度类型', t.scheduledType === '1' ? 'Cron' : (t.scheduledType === '2' ? '一次性' : t.scheduledType)],
+                ['调度配置', t.scheduledConf || '一次性任务'],
+                ['下次触发', t.nextTriggerTime ? new Date(t.nextTriggerTime).toLocaleString('zh-CN') : '-'],
+                ['上次触发', t.lastTriggerTime ? new Date(t.lastTriggerTime).toLocaleString('zh-CN') : '-'],
+                ['启用状态', t.enable === '1' ? '已启用' : '已禁用'],
+                ['执行状态', t.process || '待处理'],
+                ['Topic', t.topic || '-'],
+                ['Payload', '<code>' + esc(t.payload || '{}') + '</code>'],
+                ['创建时间', t.createAt || '-'],
+                ['更新时间', t.updateAt || '-']
+            ];
+            document.getElementById('modal-body').innerHTML = rows.map(r =>
+                '<div class="kv"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>'
+            ).join('');
+        })
+        .catch(() => {
+            document.getElementById('modal-body').innerHTML = '<div class="empty" style="color:#ef4444">加载失败</div>';
+        });
 }
+
+function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+}
+
+function toggleAutoRefresh() {
+    autoRefresh = !autoRefresh;
+    let btn = document.getElementById('btn-auto-refresh');
+    if (autoRefresh) {
+        btn.textContent = '自动刷新: 开';
+        btn.classList.remove('off');
+        autoRefreshInterval = setInterval(refresh, 10000);
+    } else {
+        btn.textContent = '自动刷新: 关';
+        btn.classList.add('off');
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+}
+
+function setSort(col) {
+    if (sortBy === col) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy = col;
+        sortDir = 'asc';
+    }
+    page = 1;
+    loadTasks();
+}
+
+function updateSortArrows() {
+    document.querySelectorAll('.sort-arrow').forEach(el => el.textContent = '');
+    if (sortBy && sortDir) {
+        let arrow = document.getElementById('arrow-' + sortBy);
+        if (arrow) arrow.textContent = sortDir === 'asc' ? '▲' : '▼';
+    }
+}
+
+function exportCSV() {
+    let taskName = document.getElementById('search-task').value.trim();
+    let bizName = document.getElementById('search-biz').value.trim();
+    let bizGroup = document.getElementById('search-bizGroup').value.trim();
+    let enable = document.getElementById('search-enable').value;
+    let process = document.getElementById('search-process').value;
+
+    let params = new URLSearchParams({ page: 1, size: 10000 });
+    if (taskName) params.set('taskName', taskName);
+    if (bizName) params.set('bizName', bizName);
+    if (bizGroup) params.set('bizGroup', bizGroup);
+    if (enable) params.set('enable', enable);
+    if (process) params.set('process', process);
+
+    toast('正在导出...');
+    fetch('/dashboard/tasks?' + params)
+        .then(r => r.json())
+        .then(d => {
+            if (!d.list || d.list.length === 0) { toast('无数据可导出', true); return; }
+            let headers = ['ID', '任务名', 'bizName', 'bizGroup', '调度配置', '下次触发', '启用', '执行状态', '创建时间'];
+            let csv = '﻿' + headers.join(',') + '\n';
+            csv += d.list.map(t => [
+                '"' + (t.id || '') + '"',
+                '"' + (t.taskName || '').replace(/"/g, '""') + '"',
+                '"' + (t.bizName || '').replace(/"/g, '""') + '"',
+                '"' + (t.bizGroup || '').replace(/"/g, '""') + '"',
+                '"' + (t.scheduledConf || '一次性') + '"',
+                '"' + (t.nextTriggerTime ? new Date(t.nextTriggerTime).toLocaleString('zh-CN') : '') + '"',
+                '"' + (t.enable === '1' ? '启用' : '禁用') + '"',
+                '"' + (t.process || '待处理') + '"',
+                '"' + (t.createAt || '') + '"'
+            ].join(',')).join('\n');
+
+            let blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'tasks_' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+            toast('导出完成，共 ' + d.list.length + ' 条');
+        })
+        .catch(() => toast('导出失败', true));
+}
+
+function toast(msg, isError) {
+    let el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + (isError ? 'error' : '');
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2000);
+}
+
 function esc(s) { return s ? s.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
 function escAttr(s) { return s ? s.replace(/'/g, "\\'").replace(/"/g, '&quot;') : ''; }
 

@@ -18,7 +18,9 @@ public interface DashboardMapper {
                                            @Param("bizName") String bizName,
                                            @Param("bizGroup") String bizGroup,
                                            @Param("enable") String enable,
-                                           @Param("process") String process);
+                                           @Param("process") String process,
+                                           @Param("sortBy") String sortBy,
+                                           @Param("sortDir") String sortDir);
 
     long countTasks(@Param("taskName") String taskName,
                     @Param("bizName") String bizName,
@@ -37,4 +39,6 @@ public interface DashboardMapper {
     int releaseTask(@Param("id") String id);
 
     int batchReleaseTasks(@Param("ids") List<String> ids);
+
+    CommonTaskEntity selectTaskById(@Param("id") String id);
 }

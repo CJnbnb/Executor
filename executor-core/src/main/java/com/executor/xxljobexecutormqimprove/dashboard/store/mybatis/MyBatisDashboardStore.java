@@ -22,8 +22,9 @@ public class MyBatisDashboardStore implements DashboardStore {
 
     @Override
     public List<CommonTaskEntity> selectTasksPage(int offset, int size, String taskName, String bizName,
-                                                   String bizGroup, String enable, String process) {
-        return mapper.selectTasksPage(offset, size, taskName, bizName, bizGroup, enable, process);
+                                                   String bizGroup, String enable, String process,
+                                                   String sortBy, String sortDir) {
+        return mapper.selectTasksPage(offset, size, taskName, bizName, bizGroup, enable, process, sortBy, sortDir);
     }
 
     @Override
@@ -59,5 +60,10 @@ public class MyBatisDashboardStore implements DashboardStore {
     @Override
     public int batchReleaseTasks(List<String> ids) {
         return mapper.batchReleaseTasks(ids);
+    }
+
+    @Override
+    public CommonTaskEntity getTaskById(String id) {
+        return mapper.selectTaskById(id);
     }
 }

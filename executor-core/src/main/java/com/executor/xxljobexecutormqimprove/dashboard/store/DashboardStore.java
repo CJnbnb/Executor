@@ -10,9 +10,12 @@ public interface DashboardStore {
     Map<String, Object> countStats(long now);
 
     List<CommonTaskEntity> selectTasksPage(int offset, int size, String taskName, String bizName,
-                                           String bizGroup, String enable, String process);
+                                           String bizGroup, String enable, String process,
+                                           String sortBy, String sortDir);
 
     long countTasks(String taskName, String bizName, String bizGroup, String enable, String process);
+
+    CommonTaskEntity getTaskById(String id);
 
     int toggleEnable(String id);
 

@@ -44,7 +44,14 @@
                 </otherwise>
             </choose>
         </if>
-        ORDER BY next_trigger_time ASC
+        <choose>
+            <when test="sortBy != null and sortBy != '' and sortDir != null and sortDir != ''">
+                ORDER BY ${sortBy} ${sortDir}
+            </when>
+            <otherwise>
+                ORDER BY next_trigger_time ASC
+            </otherwise>
+        </choose>
         LIMIT #{offset}, #{size}
     </select>
 
@@ -114,5 +121,9 @@
             #{id}
         </foreach>
     </update>
+
+    <select id="selectTaskById" resultType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
+        SELECT * FROM user_scheduled_common_task WHERE id = #{id}
+    </select>
 
 </mapper>
