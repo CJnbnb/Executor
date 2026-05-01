@@ -4,33 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.executor</groupId>
+    <parent>
+        <groupId>com.executor</groupId>
+        <artifactId>executor-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
     <artifactId>executor-example</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>executor-example</name>
-    <description>Executor 任务调度示例项目 — 演示如何接入 executor-sdk 注册定时任务</description>
-
-    <properties>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <xxl-job-core.version>2.4.0</xxl-job-core.version>
-        <executor-sdk.version>1.0.0-SNAPSHOT</executor-sdk.version>
-    </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-parent</artifactId>
-                <version>3.5.0</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <description>Executor 任务调度示例项目 — 演示如何通过 executor-sdk 注册定时任务</description>
 
     <dependencies>
         <!-- Spring Boot Web -->
@@ -46,18 +30,17 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- XXL-Job Core：提供 @XxlJob 注解和 XxlJobSpringExecutor -->
+        <!-- XXL-Job Core -->
         <dependency>
             <groupId>com.xuxueli</groupId>
             <artifactId>xxl-job-core</artifactId>
             <version>${xxl-job-core.version}</version>
         </dependency>
 
-        <!-- Executor SDK：业务方任务注册客户端，通过 RocketMQ 向 Executor 注册任务 -->
+        <!-- Executor SDK：任务注册客户端，通过 RocketMQ 向 Executor 注册任务 -->
         <dependency>
             <groupId>com.executor</groupId>
             <artifactId>executor-sdk</artifactId>
-            <version>${executor-sdk.version}</version>
         </dependency>
 
         <!-- Lombok -->
@@ -73,14 +56,6 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>3.5.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
