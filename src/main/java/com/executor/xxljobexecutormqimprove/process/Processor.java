@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -47,6 +48,14 @@ public class Processor implements MessageListenerConcurrently {
         consumer.start();
         logger.info("----initConsumer----");
     }
+    @PreDestroy
+    public void shutdown() {
+        if (consumer != null) {
+            consumer.shutdown();
+            logger.info("----RocketMQ Consumer shutdown----");
+        }
+    }
+
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext consumeConcurrentlyContext) {
         for (MessageExt msg : msgs){
@@ -79,7 +88,7 @@ public class Processor implements MessageListenerConcurrently {
         entity.setBizName(dto.getBizName());
         entity.setBizGroup(dto.getBizGroup());
         entity.setScheduledConf(dto.getScheduledConf());
-        if (dto.getTopic().isEmpty()){
+        if (dto.getTopic() == null || dto.getTopic().isEmpty()){
             entity.setTopic("executorPool");
         }else {
             entity.setTopic(dto.getTopic());
