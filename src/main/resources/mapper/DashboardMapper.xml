@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.executor.xxljobexecutormqimprove.dashboard.mapper.DashboardMapper">
+
+    <select id="countStats" resultType="map">
+        SELECT
+            COUNT(*)                                                      AS total,
+            SUM(CASE WHEN enable = '1' THEN 1 ELSE 0 END)               AS enabled,
+            SUM(CASE WHEN next_trigger_time &lt; #{now} AND enable = '1' THEN 1 ELSE 0 END) AS pending,
+            SUM(CASE WHEN enable = '0' THEN 1 ELSE 0 END)               AS disabled
+        FROM user_scheduled_common_task
+    </select>
+
+    <select id="selectTasksPage" resultType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
+        SELECT * FROM user_scheduled_common_task
+        WHERE 1 = 1
+        <if test="taskName != null and taskName != ''">
+            AND task_name LIKE CONCAT('%', #{taskName}, '%')
+        </if>
+        <if test="bizName != null and bizName != ''">
+            AND biz_name LIKE CONCAT('%', #{bizName}, '%')
+        </if>
+        ORDER BY next_trigger_time ASC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countTasks" resultType="long">
+        SELECT COUNT(*) FROM user_scheduled_common_task
+        WHERE 1 = 1
+        <if test="taskName != null and taskName != ''">
+            AND task_name LIKE CONCAT('%', #{taskName}, '%')
+        </if>
+        <if test="bizName != null and bizName != ''">
+            AND biz_name LIKE CONCAT('%', #{bizName}, '%')
+        </if>
+    </select>
+
+    <update id="toggleEnable">
+        UPDATE user_scheduled_common_task
+        SET enable = IF(enable = '1', '0', '1')
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM user_scheduled_common_task WHERE id = #{id}
+    </delete>
+
+</mapper>
