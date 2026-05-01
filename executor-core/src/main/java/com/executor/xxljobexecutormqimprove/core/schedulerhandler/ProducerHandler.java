@@ -3,6 +3,7 @@ package com.executor.xxljobexecutormqimprove.core.schedulerhandler;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
 import com.executor.xxljobexecutormqimprove.core.store.TaskStore;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.metrics.MetricsCollector;
 import com.executor.xxljobexecutormqimprove.mq.MessagePublisher;
 import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
 import com.xxl.job.core.context.XxlJobHelper;
@@ -16,6 +17,8 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -38,6 +41,31 @@ public class ProducerHandler {
 
     @Autowired
     private CommonTaskService commonTaskService;
+
+    @Autowired
+    private MetricsCollector metricsCollector;
+
+    private ExecutorService virtualThreadExecutor;
+
+    @PostConstruct
+    void initExecutor() {
+        this.virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    @PreDestroy
+    void shutdownExecutor() {
+        if (virtualThreadExecutor != null) {
+            virtualThreadExecutor.shutdown();
+            try {
+                if (!virtualThreadExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    virtualThreadExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                virtualThreadExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     @XxlJob("Executor")
     public void producerMessage(){
@@ -92,28 +120,27 @@ public class ProducerHandler {
         List<Future<Boolean>> futures = new ArrayList<>();
         List<String> attemptedIds = new ArrayList<>();
         //发送业务MQ
-        try(ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()){
-            for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
-                attemptedIds.add(task.getId());
-                futures.add(executor.submit(() ->{
-                    boolean isSuccess = messagePublisher.send(task);
-                    logger.info("已发送任务: {}", task.getTaskName());
-                    if (isSuccess){
-                        boolean taskSuccess = commonTaskService.changeTaskInfo(task);
-                        if (taskSuccess){
-                            logger.info("更改任务下次执行时间成功");
-                        }
+        for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
+            attemptedIds.add(task.getId());
+            futures.add(virtualThreadExecutor.submit(() -> {
+                boolean isSuccess = messagePublisher.send(task);
+                logger.info("已发送任务: {}", task.getTaskName());
+                if (isSuccess) {
+                    boolean taskSuccess = commonTaskService.changeTaskInfo(task);
+                    if (taskSuccess) {
+                        logger.info("更改任务下次执行时间成功");
                     }
-                    return isSuccess;
-                }));
-            }
-            //阻塞等待
-            for (Future<Boolean> future : futures){
-                try{
-                    future.get();
-                }catch (Exception e){
-                    logger.error("MQ异步任务发送异常", e);
                 }
+                metricsCollector.recordProduced(isSuccess);
+                return isSuccess;
+            }));
+        }
+        //阻塞等待
+        for (Future<Boolean> future : futures) {
+            try {
+                future.get();
+            } catch (Exception e) {
+                logger.error("MQ异步任务发送异常", e);
             }
         }
 

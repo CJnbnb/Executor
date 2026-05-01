@@ -59,6 +59,9 @@ public class RocketMQMessagePublisher implements MessagePublisher {
         String topic = task.getTopic();
         String tag = task.getTaskName();
         String messageBody = task.getPayload();
+        if (messageBody == null) {
+            messageBody = "{}";
+        }
         Message message = new Message(topic, tag, messageBody.getBytes());
         try {
             SendResult result = producer.send(message);
