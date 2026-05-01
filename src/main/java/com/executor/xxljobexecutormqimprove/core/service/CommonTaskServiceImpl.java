@@ -2,7 +2,7 @@ package com.executor.xxljobexecutormqimprove.core.service;
 
 import com.executor.xxljobexecutormqimprove.Enum.ScheduledTypeEnum;
 import com.executor.xxljobexecutormqimprove.Enum.TaskEnableEnum;
-import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
+import com.executor.xxljobexecutormqimprove.core.store.TaskStore;
 import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
 import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.util.CronTimeUtil;
@@ -18,7 +18,7 @@ import java.util.List;
 public class CommonTaskServiceImpl implements CommonTaskService{
 
     @Autowired
-    private CommonTaskBaseService commonTaskBaseService;
+    private TaskStore taskStore;
 
     private Logger logger = LoggerFactory.getLogger(CommonTaskServiceImpl.class);
 
@@ -43,7 +43,7 @@ public class CommonTaskServiceImpl implements CommonTaskService{
         changeTaskInfoDTO.setNextTriggerTime(nextTriggerTime);
         changeTaskInfoDTO.setLastTriggerTime(lastTriggerTime);
         changeTaskInfoDTO.setEnable(enable);
-        return commonTaskBaseService.changeTaskInfo(changeTaskInfoDTO);
+        return taskStore.updateTaskTriggerInfo(changeTaskInfoDTO);
 
     }
 
@@ -72,6 +72,6 @@ public class CommonTaskServiceImpl implements CommonTaskService{
             dto.setEnable(enable);
             dtoList.add(dto);
         }
-        commonTaskBaseService.batchChangeTaskInfo(dtoList);
+        taskStore.batchUpdateTaskTriggerInfo(dtoList);
     }
 }

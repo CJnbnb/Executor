@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS user_scheduled_common_task (
+    id              VARCHAR(64)  NOT NULL PRIMARY KEY COMMENT '任务ID',
+    task_name       VARCHAR(128) NOT NULL            COMMENT '任务名称',
+    biz_name        VARCHAR(64)  NOT NULL            COMMENT '业务线名称',
+    biz_group       VARCHAR(64)  NOT NULL            COMMENT '业务分组',
+    next_trigger_time BIGINT     DEFAULT NULL        COMMENT '下次触发时间戳(ms)',
+    last_trigger_time BIGINT     DEFAULT NULL        COMMENT '上次触发时间戳(ms)',
+    scheduled_conf  VARCHAR(128) DEFAULT NULL        COMMENT 'Cron表达式或调度配置',
+    scheduled_type  VARCHAR(8)   DEFAULT NULL        COMMENT '调度类型: 1=Cron, 2=一次性',
+    process         VARCHAR(16)  DEFAULT NULL        COMMENT '处理状态: NULL=未处理, processing=处理中, done=已完成',
+    enable          CHAR(1)      DEFAULT '1'         COMMENT '是否启用: 1=启用, 0=禁用',
+    payload         TEXT         DEFAULT NULL        COMMENT '业务负载(JSON)',
+    topic           VARCHAR(64)  DEFAULT 'executorPool' COMMENT 'MQ Topic',
+    create_at       DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_at       DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_biz_name_group (biz_name, biz_group),
+    INDEX idx_next_trigger (next_trigger_time),
+    INDEX idx_process (process),
+    INDEX idx_enable (enable)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='通用定时任务表';

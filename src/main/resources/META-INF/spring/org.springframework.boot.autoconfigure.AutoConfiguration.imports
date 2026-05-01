@@ -1,0 +1,2 @@
+com.executor.xxljobexecutormqimprove.config.TaskStoreAutoConfiguration
+com.executor.xxljobexecutormqimprove.config.MessageQueueAutoConfiguration
