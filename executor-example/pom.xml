@@ -30,13 +30,6 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- XXL-Job Core -->
-        <dependency>
-            <groupId>com.xuxueli</groupId>
-            <artifactId>xxl-job-core</artifactId>
-            <version>${xxl-job-core.version}</version>
-        </dependency>
-
         <!-- Executor SDK：任务注册客户端，通过 RocketMQ 向 Executor 注册任务 -->
         <dependency>
             <groupId>com.executor</groupId>

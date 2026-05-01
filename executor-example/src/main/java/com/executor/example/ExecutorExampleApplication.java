@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Executor 示例应用主类。
+ * Executor SDK 示例应用。
  * <p>
- * 启动后自动注册为 XXL-Job 执行器，并通过 executor-sdk 提供
- * 任务注册能力（RocketMQ Producer 自动初始化）。
+ * 仅引入 executor-sdk，演示业务方如何通过 SDK 注册定时任务到 Executor 调度引擎。
+ * 无需依赖 xxl-job，业务代码只和 SDK 交互。
  * </p>
  */
 @SpringBootApplication

@@ -9,11 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 示例 REST 控制器 — 方便手动测试任务注册链路。
- * <p>
- * GET  /example/health  — 健康检查，确认 SDK 和 XXL-Job 是否就绪
- * POST /example/task     — 手动注册一个 Cron 或一次性任务
- * </p>
+ * SDK 手动注册任务测试接口。
  */
 @RestController
 @RequestMapping("/example")
@@ -34,7 +30,7 @@ public class ExampleController {
         );
     }
 
-    /** 手动注册任务 */
+    /** 手动注册任务（支持 Cron 或一次性任务） */
     @PostMapping("/task")
     public Map<String, Object> registerTask(@RequestBody Map<String, Object> body) {
         String taskName = (String) body.get("taskName");
@@ -56,18 +52,17 @@ public class ExampleController {
                         .cron(cron)
                         .payload(payload)
                         .schedule();
-                log.info("Cron 任务注册成功: task={}, cron={}", taskName, cron);
             } else if (executeTime != null) {
                 sdkClient.newTask(taskName)
                         .biz(bizName, bizGroup)
                         .once(executeTime)
                         .payload(payload)
                         .schedule();
-                log.info("一次性任务注册成功: task={}, executeTime={}", taskName, executeTime);
             } else {
                 return Map.of("success", false, "error", "必须指定 cron 或 executeTime");
             }
 
+            log.info("任务注册成功: taskName={}", taskName);
             return Map.of("success", true, "taskName", taskName);
         } catch (Exception e) {
             log.error("任务注册失败: {}", e.getMessage(), e);
