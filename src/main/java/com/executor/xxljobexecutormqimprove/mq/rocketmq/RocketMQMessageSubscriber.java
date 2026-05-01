@@ -4,12 +4,16 @@ import com.alibaba.fastjson.JSONObject;
 import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.mq.MessageHandler;
 import com.executor.xxljobexecutormqimprove.mq.MessageSubscriber;
+import org.apache.rocketmq.acl.common.AclClientRPCHook;
+import org.apache.rocketmq.acl.common.SessionCredentials;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
+import org.apache.rocketmq.client.consumer.rebalance.AllocateMessageQueueAveragely;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.remoting.RPCHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,14 +28,19 @@ public class RocketMQMessageSubscriber implements MessageSubscriber, MessageList
     private final String nameServer;
     private final String topic;
     private final String consumerGroup;
+    private final String accessKey;
+    private final String secretKey;
 
     private DefaultMQPushConsumer consumer;
     private MessageHandler handler;
 
-    public RocketMQMessageSubscriber(String nameServer, String topic, String consumerGroup) {
+    public RocketMQMessageSubscriber(String nameServer, String topic, String consumerGroup,
+                                     String accessKey, String secretKey) {
         this.nameServer = nameServer;
         this.topic = topic;
         this.consumerGroup = consumerGroup;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
     }
 
     @Override
@@ -41,9 +50,13 @@ public class RocketMQMessageSubscriber implements MessageSubscriber, MessageList
 
     @PostConstruct
     public void init() throws MQClientException {
-        consumer = new DefaultMQPushConsumer();
+        if (accessKey != null && !accessKey.isEmpty()) {
+            RPCHook rpcHook = new AclClientRPCHook(new SessionCredentials(accessKey, secretKey));
+            consumer = new DefaultMQPushConsumer(consumerGroup, rpcHook, new AllocateMessageQueueAveragely());
+        } else {
+            consumer = new DefaultMQPushConsumer(consumerGroup);
+        }
         consumer.setNamesrvAddr(nameServer);
-        consumer.setConsumerGroup(consumerGroup);
         consumer.subscribe(topic, "*");
         consumer.registerMessageListener(this);
         consumer.start();

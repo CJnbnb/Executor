@@ -20,6 +20,18 @@ public class MessageQueueProperties {
     /** MQ implementation type: rocketmq, kafka, etc. */
     private String type = "rocketmq";
 
+    /** ACL access key */
+    private String accessKey;
+
+    /** ACL secret key */
+    private String secretKey;
+
+    /** Producer: send message timeout in ms */
+    private int sendMessageTimeout = 3000;
+
+    /** Producer: retry times when send failed */
+    private int retryTimesWhenSendFailed = 2;
+
     public String getNameserver() {
         return nameserver;
     }
@@ -58,5 +70,37 @@ public class MessageQueueProperties {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getAccessKey() {
+        return accessKey;
+    }
+
+    public void setAccessKey(String accessKey) {
+        this.accessKey = accessKey;
+    }
+
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
+    public int getSendMessageTimeout() {
+        return sendMessageTimeout;
+    }
+
+    public void setSendMessageTimeout(int sendMessageTimeout) {
+        this.sendMessageTimeout = sendMessageTimeout;
+    }
+
+    public int getRetryTimesWhenSendFailed() {
+        return retryTimesWhenSendFailed;
+    }
+
+    public void setRetryTimesWhenSendFailed(int retryTimesWhenSendFailed) {
+        this.retryTimesWhenSendFailed = retryTimesWhenSendFailed;
     }
 }

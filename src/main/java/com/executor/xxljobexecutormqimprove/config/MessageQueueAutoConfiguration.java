@@ -20,11 +20,14 @@ public class MessageQueueAutoConfiguration {
 
     @Bean
     public MessagePublisher messagePublisher(MessageQueueProperties properties) {
-        return new RocketMQMessagePublisher(properties.getNameserver(), producerGroup);
+        return new RocketMQMessagePublisher(properties.getNameserver(), producerGroup,
+                properties.getAccessKey(), properties.getSecretKey(),
+                properties.getSendMessageTimeout(), properties.getRetryTimesWhenSendFailed());
     }
 
     @Bean
     public MessageSubscriber messageSubscriber(MessageQueueProperties properties) {
-        return new RocketMQMessageSubscriber(properties.getNameserver(), properties.getTopic(), properties.getGroup());
+        return new RocketMQMessageSubscriber(properties.getNameserver(), properties.getTopic(),
+                properties.getGroup(), properties.getAccessKey(), properties.getSecretKey());
     }
 }
