@@ -31,7 +31,8 @@ public class CommonTaskServiceImpl implements CommonTaskService{
             try {
                 nextTriggerTime = CronTimeUtil.getNextTriggerTime(produceCommonTaskMessage.getScheduledConf(),System.currentTimeMillis());
             }catch (Exception e){
-                logger.error("生成时间失败{}",e.getMessage());
+                logger.error("Cron解析失败，1分钟后重试", e);
+                nextTriggerTime = System.currentTimeMillis() + 60_000;
             }
         }else {
             enable = TaskEnableEnum.TASK_UNABLE;
@@ -59,7 +60,8 @@ public class CommonTaskServiceImpl implements CommonTaskService{
                 try {
                     nextTriggerTime = CronTimeUtil.getNextTriggerTime(task.getScheduledConf(),System.currentTimeMillis());
                 }catch (Exception e){
-                    logger.error("生成时间失败{}",e.getMessage());
+                    logger.error("Cron解析失败(批量)，1分钟后重试", e);
+                    nextTriggerTime = System.currentTimeMillis() + 60_000;
                 }
             }else {
                 enable = TaskEnableEnum.TASK_UNABLE;
