@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executor Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f3f4f6; color: #1f2937; }
+        .header { background: #1f2937; color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+        .header h1 { font-size: 18px; font-weight: 600; }
+        .header .ver { font-size: 12px; color: #9ca3af; }
+        .wrap { max-width: 1200px; margin: 0 auto; padding: 20px; }
+
+        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+        .card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .card .num { font-size: 28px; font-weight: 700; }
+        .card .label { font-size: 13px; color: #6b7280; margin-top: 4px; }
+        .card.c-total .num { color: #3b82f6; }
+        .card.c-enabled .num { color: #10b981; }
+        .card.c-pending .num { color: #f59e0b; }
+        .card.c-disabled .num { color: #ef4444; }
+
+        .toolbar { display: flex; gap: 10px; margin-bottom: 16px; }
+        .toolbar input { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; width: 180px; }
+        .toolbar input:focus { border-color: #3b82f6; }
+        .toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; background: #3b82f6; color: #fff; }
+        .toolbar button:hover { background: #2563eb; }
+
+        .box { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f9fafb; padding: 12px 14px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+        tr:hover td { background: #f9fafb; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .tag-on { background: #d1fae5; color: #065f46; }
+        .tag-off { background: #fee2e2; color: #991b1b; }
+        .tag-done { background: #dbeafe; color: #1e40af; }
+        .tag-wait { background: #fef3c7; color: #92400e; }
+        .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0 2px; }
+        .btn-toggle { background: #f59e0b; color: #fff; }
+        .btn-toggle:hover { background: #d97706; }
+        .btn-del { background: #ef4444; color: #fff; }
+        .btn-del:hover { background: #dc2626; }
+
+        .pager { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-size: 13px; color: #6b7280; }
+        .pager button { padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; }
+        .pager button:disabled { opacity: .4; cursor: default; }
+        .pager button:hover:not(:disabled) { background: #f3f4f6; }
+        .empty { text-align: center; padding: 40px; color: #9ca3af; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Executor Dashboard</h1>
+    <span class="ver">v1.0 MVP</span>
+</div>
+
+<div class="wrap">
+
+    <div class="cards">
+        <div class="card c-total"><div class="num" id="stat-total">-</div><div class="label">任务总数</div></div>
+        <div class="card c-enabled"><div class="num" id="stat-enabled">-</div><div class="label">已启用</div></div>
+        <div class="card c-pending"><div class="num" id="stat-pending">-</div><div class="label">待执行</div></div>
+        <div class="card c-disabled"><div class="num" id="stat-disabled">-</div><div class="label">已禁用</div></div>
+    </div>
+
+    <div class="toolbar">
+        <input type="text" id="search-task" placeholder="任务名称搜索..." onkeydown="if(event.key==='Enter')search()">
+        <input type="text" id="search-biz" placeholder="业务名称搜索..." onkeydown="if(event.key==='Enter')search()">
+        <button onclick="search()">查询</button>
+        <button onclick="resetSearch()" style="background:#6b7280">重置</button>
+    </div>
+
+    <div class="box">
+        <table>
+            <thead>
+                <tr>
+                    <th>任务ID</th>
+                    <th>任务名</th>
+                    <th>bizName</th>
+                    <th>bizGroup</th>
+                    <th>Cron / 调度配置</th>
+                    <th>下次触发</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
+        <div class="pager">
+            <span id="pager-info">共 0 条</span>
+            <div>
+                <button id="btn-prev" onclick="prevPage()" disabled>上一页</button>
+                <button id="btn-next" onclick="nextPage()" disabled>下一页</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let page = 1, size = 20, totalPages = 0;
+
+function loadStats() {
+    fetch('/dashboard/stats')
+        .then(r => r.json())
+        .then(d => {
+            document.getElementById('stat-total').textContent = d.total;
+            document.getElementById('stat-enabled').textContent = d.enabled;
+            document.getElementById('stat-pending').textContent = d.pending;
+            document.getElementById('stat-disabled').textContent = d.disabled;
+        });
+}
+
+function loadTasks() {
+    let taskName = document.getElementById('search-task').value.trim();
+    let bizName = document.getElementById('search-biz').value.trim();
+    let params = new URLSearchParams({ page, size });
+    if (taskName) params.set('taskName', taskName);
+    if (bizName) params.set('bizName', bizName);
+
+    fetch('/dashboard/tasks?' + params)
+        .then(r => r.json())
+        .then(d => {
+            totalPages = d.totalPages;
+            document.getElementById('pager-info').textContent = '共 ' + d.total + ' 条，第 ' + page + '/' + Math.max(totalPages, 1) + ' 页';
+            document.getElementById('btn-prev').disabled = page <= 1;
+            document.getElementById('btn-next').disabled = page >= totalPages;
+
+            let tbody = document.getElementById('tbody');
+            if (!d.list || d.list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+                return;
+            }
+            tbody.innerHTML = d.list.map(t => {
+                let processTag = '';
+                if (t.process === 'processing') processTag = '<span class="tag tag-wait">处理中</span>';
+                else if (t.process === 'done') processTag = '<span class="tag tag-done">完成</span>';
+                else processTag = '<span class="tag tag-wait">待处理</span>';
+
+                let timeStr = t.nextTriggerTime ? new Date(t.nextTriggerTime).toLocaleString('zh-CN') : '-';
+                let enableTag = t.enable === '1'
+                    ? '<span class="tag tag-on">启用</span>'
+                    : '<span class="tag tag-off">禁用</span>';
+                let toggleText = t.enable === '1' ? '禁用' : '启用';
+
+                return '<tr>'
+                    + '<td title="' + t.id + '">' + (t.id.length > 20 ? t.id.substring(0, 20) + '...' : t.id) + '</td>'
+                    + '<td>' + esc(t.taskName) + '</td>'
+                    + '<td>' + esc(t.bizName) + '</td>'
+                    + '<td>' + esc(t.bizGroup) + '</td>'
+                    + '<td>' + (t.scheduledConf || '一次性') + '</td>'
+                    + '<td>' + timeStr + '</td>'
+                    + '<td>' + enableTag + ' ' + processTag + '</td>'
+                    + '<td>'
+                    + '<button class="btn-sm btn-toggle" onclick="toggleEnable(\'' + t.id + '\')">' + toggleText + '</button>'
+                    + '<button class="btn-sm btn-del" onclick="delTask(\'' + t.id + '\')">删除</button>'
+                    + '</td>'
+                    + '</tr>';
+            }).join('');
+        });
+}
+
+function refresh() { loadStats(); loadTasks(); }
+
+function search() { page = 1; loadTasks(); }
+function resetSearch() { document.getElementById('search-task').value = ''; document.getElementById('search-biz').value = ''; page = 1; loadTasks(); }
+function prevPage() { if (page > 1) { page--; loadTasks(); } }
+function nextPage() { if (page < totalPages) { page++; loadTasks(); } }
+
+function toggleEnable(id) {
+    fetch('/dashboard/tasks/' + id + '/toggle', { method: 'PUT' })
+        .then(r => r.json())
+        .then(d => { if (d.success) refresh(); else alert('操作失败'); });
+}
+function delTask(id) {
+    if (!confirm('确认删除该任务？')) return;
+    fetch('/dashboard/tasks/' + id, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(d => { if (d.success) refresh(); else alert('删除失败'); });
+}
+function esc(s) { return s ? s.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''; }
+
+refresh();
+</script>
+</body>
+</html>
