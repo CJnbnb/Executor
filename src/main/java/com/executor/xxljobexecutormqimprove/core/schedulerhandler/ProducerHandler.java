@@ -90,19 +90,19 @@ public class ProducerHandler {
          * 用线程池优化业务执行速度
          */
         List<Future<Boolean>> futures = new ArrayList<>();
-        List<String> successId = new ArrayList<>();
+        List<String> attemptedIds = new ArrayList<>();
         //发送业务MQ
         try(ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()){
             for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
+                attemptedIds.add(task.getId());
                 futures.add(executor.submit(() ->{
                     boolean isSuccess = producerMessage.send(task);
                     logger.info("已发送任务: {}", task.getTaskName());
                     if (isSuccess){
                         boolean taskSuccess = commonTaskService.changeTaskInfo(task);
                         if (taskSuccess){
-                            successId.add(task.getId());
+                            logger.info("更改任务下次执行时间成功");
                         }
-                        logger.info("更改任务下次执行时间成功");
                     }
                     return isSuccess;
                 }));
@@ -112,13 +112,13 @@ public class ProducerHandler {
                 try{
                     future.get();
                 }catch (Exception e){
-                    logger.error("MQ异步任务发送异常{}",e.getMessage());
+                    logger.error("MQ异步任务发送异常", e);
                 }
             }
         }
 
-        // 4. 解锁（回写状态）
-        commonTaskBaseService.unlockTasks(successId);
+        // 4. 解锁（回写状态，所有尝试过的任务都解锁，失败的可下次重试）
+        commonTaskBaseService.unlockTasks(attemptedIds);
 
     }
 
