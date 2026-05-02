@@ -39,6 +39,8 @@ public class DashboardService {
     public Map<String, Object> tasks(int page, int size, String taskName, String bizName,
                                       String bizGroup, String enable, String process,
                                       String sortBy, String sortDir) {
+        if (page < 1) page = 1;
+        if (size < 1) size = 20;
         if (sortBy != null && !ALLOWED_SORT_COLUMNS.contains(sortBy)) {
             sortBy = null;
             sortDir = null;

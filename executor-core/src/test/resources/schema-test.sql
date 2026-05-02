@@ -15,3 +15,18 @@ CREATE TABLE IF NOT EXISTS user_scheduled_common_task (
     topic          VARCHAR(255),
     task_id        VARCHAR(64)
 );
+
+CREATE TABLE IF NOT EXISTS task_event_log (
+    id            BIGINT AUTO_INCREMENT PRIMARY KEY,
+    task_id       VARCHAR(64) NOT NULL,
+    task_name     VARCHAR(128),
+    biz_name      VARCHAR(64),
+    biz_group     VARCHAR(64),
+    event_type    VARCHAR(32) NOT NULL,
+    from_status   VARCHAR(16),
+    to_status     VARCHAR(16),
+    event_msg     VARCHAR(1024),
+    event_time    DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tel_task_id (task_id),
+    INDEX idx_tel_event_time (event_time)
+);

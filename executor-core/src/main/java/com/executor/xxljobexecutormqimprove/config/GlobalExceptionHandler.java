@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, Object> handleGeneral(Exception e) {
-        log.error("Unhandled exception", e);
-        return Map.of("success", false, "error", "Internal server error");
+        log.error("Unhandled exception: {}", e.getMessage(), e);
+        return Map.of("success", false, "error", "Internal server error: " + e.getMessage());
     }
 }

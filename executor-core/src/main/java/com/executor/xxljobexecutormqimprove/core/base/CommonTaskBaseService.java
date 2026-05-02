@@ -21,9 +21,13 @@ public class CommonTaskBaseService {
 
     public boolean upsetTask(CommonTaskEntity commonTaskEntity) {
         boolean ok = commonTaskMapper.upsetTskInfo(commonTaskEntity);
-        logService.logById(commonTaskEntity.getId(), commonTaskEntity.getTaskName(),
-                commonTaskEntity.getBizName(), commonTaskEntity.getBizGroup(),
-                "SCHEDULED", null, ProcessEnum.PENDING, null);
+        try {
+            logService.logById(commonTaskEntity.getId(), commonTaskEntity.getTaskName(),
+                    commonTaskEntity.getBizName(), commonTaskEntity.getBizGroup(),
+                    "SCHEDULED", null, ProcessEnum.PENDING, null);
+        } catch (Exception e) {
+            // 日志写入失败不影响主流程
+        }
         return ok;
     }
 
