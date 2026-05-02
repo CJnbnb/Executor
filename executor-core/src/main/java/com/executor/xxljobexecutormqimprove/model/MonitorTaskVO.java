@@ -1,19 +1,19 @@
-package com.executor.xxljobexecutormqimprove.entity;
+package com.executor.xxljobexecutormqimprove.model;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class ProcessCommonTaskDTO implements Serializable{
+public class MonitorTaskVO {
+    private String id;
     private String taskName;
     private String bizName;
     private String bizGroup;
     private String scheduledConf;
     private String scheduledType;
-    private Long executeTime;
-    private Boolean enable;
     private String payload;
+    private String enable;
     private String topic;
-}
-
+    private String process;
+    private Long nextTriggerTime;
+    private Long lastTriggerTime;
+} 
