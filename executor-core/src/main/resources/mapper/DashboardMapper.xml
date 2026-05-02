@@ -16,7 +16,7 @@
         FROM user_scheduled_common_task
     </select>
 
-    <select id="selectTasksPage" resultType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
+    <select id="selectTasksPage" resultType="com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity">
         SELECT * FROM user_scheduled_common_task
         WHERE 1 = 1
         <if test="taskName != null and taskName != ''">
@@ -32,17 +32,7 @@
             AND enable = #{enable}
         </if>
         <if test="process != null and process != ''">
-            <choose>
-                <when test="process == 'pending'">
-                    AND process IS NULL
-                </when>
-                <when test="process == 'stuck'">
-                    AND process = 'processing' AND update_at &lt; DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-                </when>
-                <otherwise>
-                    AND process = #{process}
-                </otherwise>
-            </choose>
+            AND process = #{process}
         </if>
         <choose>
             <when test="sortBy != null and sortBy != '' and sortDir != null and sortDir != ''">
@@ -71,17 +61,7 @@
             AND enable = #{enable}
         </if>
         <if test="process != null and process != ''">
-            <choose>
-                <when test="process == 'pending'">
-                    AND process IS NULL
-                </when>
-                <when test="process == 'stuck'">
-                    AND process = 'processing' AND update_at &lt; DATE_SUB(NOW(), INTERVAL 5 MINUTE)
-                </when>
-                <otherwise>
-                    AND process = #{process}
-                </otherwise>
-            </choose>
+            AND process = #{process}
         </if>
     </select>
 
@@ -112,17 +92,17 @@
     </delete>
 
     <update id="releaseTask">
-        UPDATE user_scheduled_common_task SET process = NULL WHERE id = #{id}
+        UPDATE user_scheduled_common_task SET process = 'pending' WHERE id = #{id}
     </update>
 
     <update id="batchReleaseTasks">
-        UPDATE user_scheduled_common_task SET process = NULL WHERE id IN
+        UPDATE user_scheduled_common_task SET process = 'pending' WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}
         </foreach>
     </update>
 
-    <select id="selectTaskById" resultType="com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity">
+    <select id="selectTaskById" resultType="com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity">
         SELECT * FROM user_scheduled_common_task WHERE id = #{id}
     </select>
 

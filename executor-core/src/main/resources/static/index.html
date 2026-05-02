@@ -194,7 +194,7 @@ let sortBy = '', sortDir = '';
 function loadStats() {
     let ids = ['total','enabled','pending','processing','stuck','disabled'];
     ids.forEach(id => document.getElementById('stat-' + id).textContent = '...');
-    fetch('/dashboard/stats')
+    fetch('/dashboard/api/stats')
         .then(r => r.json())
         .then(d => {
             document.getElementById('stat-total').textContent = d.total;
@@ -230,7 +230,7 @@ function loadTasks() {
     if (process) params.set('process', process);
     if (sortBy) { params.set('sortBy', sortBy); params.set('sortDir', sortDir); }
 
-    fetch('/dashboard/tasks?' + params)
+    fetch('/dashboard/api/tasks?' + params)
         .then(r => r.json())
         .then(d => {
             busy = false;
@@ -259,8 +259,12 @@ function loadTasks() {
                     processTag = '<span class="tag tag-processing">处理中</span>';
                 } else if (t.process === 'done') {
                     processTag = '<span class="tag tag-done">已完成</span>';
+                } else if (t.process === 'pending') {
+                    processTag = '<span class="tag" style="background:#f3f4f6;color:#6b7280">待处理</span>';
+                } else if (t.process === 'exception') {
+                    processTag = '<span class="tag tag-stuck">异常</span>';
                 } else {
-                    processTag = '<span class="tag" style="background:#f3f4f6;color:#9ca3af">待处理</span>';
+                    processTag = '<span class="tag">' + esc(t.process || '') + '</span>';
                 }
 
                 let sid = escAttr(t.id);
@@ -313,7 +317,7 @@ function updateBatchBar() {
 function batchToggle(enable) {
     if (selectedIds.size === 0 || busy) return;
     busy = true;
-    fetch('/dashboard/tasks/batch/toggle', {
+    fetch('/dashboard/api/tasks/batch/toggle', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ids: Array.from(selectedIds), enable: enable})
@@ -325,7 +329,7 @@ function batchDelete() {
     if (selectedIds.size === 0 || busy) return;
     if (!confirm('确认删除选中的 ' + selectedIds.size + ' 个任务？')) return;
     busy = true;
-    fetch('/dashboard/tasks/batch/delete', {
+    fetch('/dashboard/api/tasks/batch/delete', {
         method: 'DELETE',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ids: Array.from(selectedIds)})
@@ -336,7 +340,7 @@ function batchDelete() {
 function batchRelease() {
     if (selectedIds.size === 0 || busy) return;
     busy = true;
-    fetch('/dashboard/tasks/batch/release', {
+    fetch('/dashboard/api/tasks/batch/release', {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ids: Array.from(selectedIds)})
@@ -362,7 +366,7 @@ function nextPage() { if (page < totalPages && !busy) { page++; loadTasks(); } }
 function toggleEnable(id) {
     if (busy) return;
     busy = true;
-    fetch('/dashboard/tasks/' + encodeURIComponent(id) + '/toggle', { method: 'PUT' })
+    fetch('/dashboard/api/tasks/' + encodeURIComponent(id) + '/toggle', { method: 'PUT' })
         .then(r => r.json())
         .then(d => { busy = false; if (d.success) refresh(); else toast('操作失败', true); })
         .catch(() => { busy = false; toast('操作失败', true); });
@@ -370,7 +374,7 @@ function toggleEnable(id) {
 function releaseTask(id) {
     if (busy) return;
     busy = true;
-    fetch('/dashboard/tasks/' + encodeURIComponent(id) + '/release', { method: 'PUT' })
+    fetch('/dashboard/api/tasks/' + encodeURIComponent(id) + '/release', { method: 'PUT' })
         .then(r => r.json())
         .then(d => { busy = false; if (d.success) refresh(); else toast('释放失败', true); })
         .catch(() => { busy = false; toast('释放失败', true); });
@@ -379,7 +383,7 @@ function delTask(id) {
     if (busy) return;
     if (!confirm('确认删除该任务？')) return;
     busy = true;
-    fetch('/dashboard/tasks/' + encodeURIComponent(id), { method: 'DELETE' })
+    fetch('/dashboard/api/tasks/' + encodeURIComponent(id), { method: 'DELETE' })
         .then(r => r.json())
         .then(d => { busy = false; if (d.success) refresh(); else toast('删除失败', true); })
         .catch(() => { busy = false; toast('删除失败', true); });
@@ -388,7 +392,7 @@ function delTask(id) {
 function showDetail(id) {
     document.getElementById('modal-body').innerHTML = '<div class="empty">加载中...</div>';
     document.getElementById('modal-overlay').classList.add('show');
-    fetch('/dashboard/tasks/' + encodeURIComponent(id))
+    fetch('/dashboard/api/tasks/' + encodeURIComponent(id))
         .then(r => r.json())
         .then(d => {
             if (!d.success || !d.data) {
@@ -406,7 +410,7 @@ function showDetail(id) {
                 ['下次触发', t.nextTriggerTime ? new Date(t.nextTriggerTime).toLocaleString('zh-CN') : '-'],
                 ['上次触发', t.lastTriggerTime ? new Date(t.lastTriggerTime).toLocaleString('zh-CN') : '-'],
                 ['启用状态', t.enable === '1' ? '已启用' : '已禁用'],
-                ['执行状态', t.process || '待处理'],
+                ['执行状态', t.process || ''],
                 ['Topic', t.topic || '-'],
                 ['Payload', '<code>' + esc(t.payload || '{}') + '</code>'],
                 ['创建时间', t.createAt || '-'],
@@ -474,7 +478,7 @@ function exportCSV() {
     if (process) params.set('process', process);
 
     toast('正在导出...');
-    fetch('/dashboard/tasks?' + params)
+    fetch('/dashboard/api/tasks?' + params)
         .then(r => r.json())
         .then(d => {
             if (!d.list || d.list.length === 0) { toast('无数据可导出', true); return; }
@@ -488,7 +492,7 @@ function exportCSV() {
                 '"' + (t.scheduledConf || '一次性') + '"',
                 '"' + (t.nextTriggerTime ? new Date(t.nextTriggerTime).toLocaleString('zh-CN') : '') + '"',
                 '"' + (t.enable === '1' ? '启用' : '禁用') + '"',
-                '"' + (t.process || '待处理') + '"',
+                '"' + (t.process || '') + '"',
                 '"' + (t.createAt || '') + '"'
             ].join(',')).join('\n');
 
