@@ -1,7 +1,9 @@
 package com.executor.xxljobexecutormqimprove;
 
+import com.executor.xxljobexecutormqimprove.core.producer.MessageProducer;
 import com.executor.xxljobexecutormqimprove.mq.MessagePublisher;
 import com.executor.xxljobexecutormqimprove.mq.MessageSubscriber;
+import com.executor.xxljobexecutormqimprove.process.UpsertTaskProcessor;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -14,6 +16,12 @@ class XxlJobExecutorMqImproveApplicationTests {
 
     @MockBean
     private MessageSubscriber messageSubscriber;
+
+    @MockBean
+    private MessageProducer messageProducer;
+
+    @MockBean
+    private UpsertTaskProcessor upsertTaskProcessor;
 
     @Test
     void contextLoads() {

@@ -1,95 +1,166 @@
-# Executor — 基于 RocketMQ 的任务调度执行引擎
+# XXL-Job Executor MQ Improve
 
-对 XXL-Job 的增强改造，将任务注册与调度解耦。业务方通过轻量级 SDK 注册定时任务，调度引擎统一扫描并分发到 RocketMQ，消费者异步执行。内置 Dashboard 供中台团队全局运维。
+XXL-Job Executor MQ Improve 是基于 XXL-Job 的分布式高并发任务调度中台，集成 RocketMQ 消息队列，提供高性能、高可靠的任务调度解决方案。
 
-## 快速开始
+## 主要特性
 
-### 环境
+- ⏱️ 秒级精准调度，支持时间轮算法
+- 🚀 RocketMQ 消息驱动，异步高吞吐
+- 🖥️ Web 管理界面，实时监控任务状态
+- 🛡️ 状态机+补偿机制，保障数据一致性
+- ⚡ 现代化技术栈：Spring Boot 3.x + JDK 21 + 虚拟线程
 
-- JDK 21+ / MySQL 8.0+ / RocketMQ 4.x+ / XXL-Job Admin 2.4.0
 
-### 初始化数据库
 
-```bash
-mysql -u root -p < doc/schema.sql
+## 🏗️ 架构设计
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   XXL-Job       │    │   Executor      │    │   RocketMQ      │
+│   Admin         │───▶│   MQ Improve    │───▶│   Consumer      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌─────────────────┐
+                       │   MySQL         │
+                       │   (Task Store)  │
+                       └─────────────────┘
 ```
 
-### 构建
+## 🚀 快速开始
 
+### 环境要求
+
+- JDK 21+
+- MySQL 5.0+
+- RocketMQ 4.9+
+- XXL-Job Admin 2.4.0+
+
+### 安装部署
+
+1. **克隆项目**
 ```bash
-cd executor-sdk && mvn clean install -DskipTests
-cd ../Executor && mvn clean package -DskipTests
+git clone https://github.com/your-username/xxl-job-executor-mq-improve.git
+cd xxl-job-executor-mq-improve
 ```
 
-### 配置 & 启动
+2. **配置数据库**
+```sql
+-- 执行SQL脚本
+source src/main/resources/sql/init.sql
+```
 
+3. **修改配置**
+```yaml
+# application.yml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/xxl_job_executor_mq
+    username: your-username
+    password: your-password
+
+rocketmq:
+  name-server: localhost:9876
+  producer:
+    group: xxl-job-producer
+```
+
+4. **启动应用**
 ```bash
-cd Executor/executor-core
-export DB_PASSWORD=your_password
-export ROCKETMQ_SECRET_KEY=your_secret
-
-# 编辑 application.properties 中的 nameserver / admin 地址后启动
 mvn spring-boot:run
 ```
 
-启动后访问 Dashboard：`http://localhost:8081/`
-
-## 模块
-
-| 模块 | 说明 |
-|------|------|
-| `executor-sdk` | 业务方引入的客户端 SDK，无 XXL-Job 依赖 |
-| `executor-core` | 调度引擎 + Dashboard，Spring Boot 应用 |
-| `executor-example` | SDK 使用示例 |
-
-## 核心概念
-
-### bizName 与 bizGroup
-
-`bizName`（业务线）和 `bizGroup`（业务分组）是任务调度路由的两个关键标识，**SDK 注册的值必须与 XXL-Job Admin 任务参数完全一致**：
-
+5. **访问管理界面**
 ```
-SDK:  .biz("order", "daily_report")
-  →  DB: biz_name='order', biz_group='daily_report'
-  →  XXL-Job Admin 任务参数: order,daily_report
-  →  ProducerHandler: WHERE biz_name='order' AND biz_group='daily_report'
+http://localhost:8080/manage/dashboard
 ```
 
-- `bizName` — 业务线名称（如 order、user、payment），建议按业务域划分
-- `bizGroup` — 业务线内的分组（如 daily_report、cleanup、export），按功能细分
-- **两者必须**: SDK 注册时传入 + XXL-Job Admin 配置对应的调度任务，缺一任务永远不会执行
+## 📖 使用指南
 
-> 可以为不同 bizName/bizGroup 组合在 XXL-Job Admin 中创建多个调度任务，实现分组隔离、独立 Cron、独立分片。
+### 1. 创建任务
 
-## 业务方接入
+通过XXL-Job Admin创建任务，选择执行器为"Executor"。
 
-```java
-@Autowired private ExecutorSdkClient sdkClient;
+### 2. 配置任务参数
 
-// bizName 和 bizGroup 必须与 XXL-Job Admin 中的任务参数一致
-sdkClient.newTask()
-    .biz("order", "daily_report")
-    .taskName("每日订单汇总")
-    .cron("0 0 8 * * ?")
-    .payload("{\"type\":\"report\"}")
-    .schedule();
+```
+bizName:testBiz,bizGroup:testGroup
+eg:testBiz-1,testGroup-1
 ```
 
-## Dashboard
+### 3. 监控任务状态
 
-中台团队通过 Dashboard 全局监控和管理所有任务：统计、搜索、启用/禁用、释放卡住任务、批量操作。
+访问Web管理界面查看任务执行情况。
 
-![](无截图)
+## 🔧 配置说明
 
-## 文档
+### 核心配置
 
-- [架构设计](doc/architecture.md)
-- [配置参考](doc/configuration.md)
-- [SDK 使用指南](doc/sdk-usage.md)
-- [Dashboard API](doc/dashboard-api.md)
-- [部署指南](doc/deployment.md)
-- [数据库 Schema](doc/schema.sql)
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `xxl.job.executor.port` | 9999 | 执行器端口 |
+| `xxl.job.executor.logpath` | ./logs | 日志路径 |
+| `xxl.job.executor.logretentiondays` | 30 | 日志保留天数 |
 
-## License
+### 调度配置
 
-Internal Use Only
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| `scheduler.limit-count` | 200 | 单次处理任务数 |
+| `scheduler.pre-read-ms` | 5000 | 预读时间(毫秒) |
+| `scheduler.timeout-ms` | 300000 | 超时时间(毫秒) |
+
+## 🏗️ 项目结构
+
+```
+src/main/java/com/executor/xxljobexecutormqimprove/
+├── config/              # 配置类
+├── controller/          # 控制器
+├── core/               # 核心模块
+│   ├── base/           # 基础服务
+│   ├── schedulerhandler/ # 调度处理器
+│   ├── service/        # 核心服务
+│   └── thread/         # 线程池
+├── entity/             # 实体类
+├── mapper/             # 数据访问层
+├── producer/           # 消息生产者
+├── service/            # 业务服务
+└── util/               # 工具类
+```
+
+## 🤝 贡献指南
+
+欢迎提交Issue和Pull Request！
+
+### 开发环境搭建
+
+1. Fork项目
+2. 创建特性分支
+3. 提交代码
+4. 创建Pull Request
+
+### 代码规范
+
+- 遵循阿里巴巴Java开发手册
+- 单元测试覆盖率 > 80%
+- 提交信息使用英文
+
+## 📄 许可证
+
+本项目采用 [MIT License](LICENSE) 许可证。
+
+## 🙏 致谢
+
+- [XXL-Job](https://github.com/xuxueli/xxl-job) - 分布式任务调度平台
+- [RocketMQ](https://github.com/apache/rocketmq) - 分布式消息队列
+- [Spring Boot](https://spring.io/projects/spring-boot) - 应用框架
+
+## 📞 联系方式
+
+- 邮箱: 1498377512@qq.com
+- 微信: 19925983329
+- 项目地址: https://github.com/your-username/xxl-job-executor-mq-improve
+
+---
+
+如果这个项目对你有帮助，请给个⭐️支持一下！ 

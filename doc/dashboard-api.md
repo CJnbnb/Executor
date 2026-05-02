@@ -35,7 +35,7 @@ GET /dashboard/stats
 | `pending` | 待执行：enable=1 且 next_trigger_time 已过期 |
 | `disabled` | 已禁用的任务数 |
 | `processing` | 正在执行中的任务数 |
-| `stuck` | 卡住任务：process=processing 且超过 5 分钟未释放 |
+| `stuck` | 卡住任务：process=processing 且超过 1 分钟未释放 |
 
 ---
 
@@ -53,7 +53,7 @@ GET /dashboard/tasks?page=1&size=20&taskName=xxx&bizName=xxx&bizGroup=xxx&enable
 | `bizName` | String | 否 | 业务线名称模糊匹配 |
 | `bizGroup` | String | 否 | 业务分组模糊匹配 |
 | `enable` | String | 否 | `1`=启用，`0`=禁用 |
-| `process` | String | 否 | `pending`=待处理，`processing`=处理中，`stuck`=卡住，`done`=已完成 |
+| `process` | String | 否 | `pending`=待处理，`processing`=处理中，`stuck`=卡住 (processing 超过 1 分钟)，`exception`=异常 |
 
 响应：
 ```json
@@ -70,7 +70,7 @@ GET /dashboard/tasks?page=1&size=20&taskName=xxx&bizName=xxx&bizGroup=xxx&enable
       "nextTriggerTime": 1714651200000,
       "lastTriggerTime": 1714564800000,
       "enable": "1",
-      "process": "done",
+      "process": "pending",
       "payload": "{\"type\":\"report\"}",
       "topic": "executorPool",
       "createAt": "2026-05-01 08:00:00",
@@ -105,7 +105,7 @@ PUT /dashboard/tasks/{id}/toggle
 PUT /dashboard/tasks/{id}/release
 ```
 
-将卡住或异常处理中的任务释放回待处理状态（`process = NULL`）。
+将卡住或异常处理中的任务释放回待处理状态（`process = 'pending'`）。
 
 响应：
 ```json

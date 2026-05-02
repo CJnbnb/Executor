@@ -1,8 +1,8 @@
 package com.executor.xxljobexecutormqimprove.core.service;
 
-import com.executor.xxljobexecutormqimprove.core.store.TaskStore;
-import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.core.base.CommonTaskBaseService;
+import com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class CommonTaskServiceImplTest {
 
     @Mock
-    private TaskStore taskStore;
+    private CommonTaskBaseService commonTaskBaseService;
 
     private CommonTaskServiceImpl service;
 
@@ -29,9 +29,9 @@ class CommonTaskServiceImplTest {
     void setUp() {
         service = new CommonTaskServiceImpl();
         try {
-            java.lang.reflect.Field field = CommonTaskServiceImpl.class.getDeclaredField("taskStore");
+            java.lang.reflect.Field field = CommonTaskServiceImpl.class.getDeclaredField("commonTaskBaseService");
             field.setAccessible(true);
-            field.set(service, taskStore);
+            field.set(service, commonTaskBaseService);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -40,13 +40,13 @@ class CommonTaskServiceImplTest {
     @Test
     void testChangeTaskInfoCronTask() {
         ProduceCommonTaskMessage task = createTask("1", "0 * * * * ?");
-        when(taskStore.updateTaskTriggerInfo(any())).thenReturn(true);
+        when(commonTaskBaseService.changeTaskInfo(any())).thenReturn(true);
 
         boolean result = service.changeTaskInfo(task);
 
         assertTrue(result);
         ArgumentCaptor<ChangeTaskInfoDTO> captor = ArgumentCaptor.forClass(ChangeTaskInfoDTO.class);
-        verify(taskStore).updateTaskTriggerInfo(captor.capture());
+        verify(commonTaskBaseService).changeTaskInfo(captor.capture());
         assertEquals("1", captor.getValue().getEnable());
         assertNotNull(captor.getValue().getNextTriggerTime());
     }
@@ -55,13 +55,13 @@ class CommonTaskServiceImplTest {
     void testChangeTaskInfoOnceTask() {
         ProduceCommonTaskMessage task = createTask("2", null);
         task.setScheduledType("2");
-        when(taskStore.updateTaskTriggerInfo(any())).thenReturn(true);
+        when(commonTaskBaseService.changeTaskInfo(any())).thenReturn(true);
 
         boolean result = service.changeTaskInfo(task);
 
         assertTrue(result);
         ArgumentCaptor<ChangeTaskInfoDTO> captor = ArgumentCaptor.forClass(ChangeTaskInfoDTO.class);
-        verify(taskStore).updateTaskTriggerInfo(captor.capture());
+        verify(commonTaskBaseService).changeTaskInfo(captor.capture());
         assertEquals("0", captor.getValue().getEnable());
         assertNull(captor.getValue().getNextTriggerTime());
     }
@@ -75,41 +75,52 @@ class CommonTaskServiceImplTest {
 
         service.batchChangeTaskInfo(tasks);
 
-        verify(taskStore).batchUpdateTaskTriggerInfo(anyList());
+        verify(commonTaskBaseService).batchChangeTaskInfo(anyList());
     }
 
     @Test
     void testBatchChangeTaskInfoEmptyList() {
         service.batchChangeTaskInfo(List.of());
-        verify(taskStore, never()).batchUpdateTaskTriggerInfo(anyList());
+        verify(commonTaskBaseService, never()).batchChangeTaskInfo(anyList());
     }
 
     @Test
     void testBatchChangeTaskInfoNullList() {
         service.batchChangeTaskInfo(null);
-        verify(taskStore, never()).batchUpdateTaskTriggerInfo(anyList());
+        verify(commonTaskBaseService, never()).batchChangeTaskInfo(anyList());
     }
 
     @Test
     void testSingleAndBatchProduceSameResult() {
         ProduceCommonTaskMessage task = createTask("test", "0 0 12 * * ?");
-        when(taskStore.updateTaskTriggerInfo(any())).thenReturn(true);
+        when(commonTaskBaseService.changeTaskInfo(any())).thenReturn(true);
 
         service.changeTaskInfo(task);
 
         ArgumentCaptor<ChangeTaskInfoDTO> singleCaptor = ArgumentCaptor.forClass(ChangeTaskInfoDTO.class);
-        verify(taskStore).updateTaskTriggerInfo(singleCaptor.capture());
+        verify(commonTaskBaseService).changeTaskInfo(singleCaptor.capture());
 
         service.batchChangeTaskInfo(List.of(task));
 
         ArgumentCaptor<List<ChangeTaskInfoDTO>> batchCaptor = ArgumentCaptor.forClass(List.class);
-        verify(taskStore).batchUpdateTaskTriggerInfo(batchCaptor.capture());
+        verify(commonTaskBaseService).batchChangeTaskInfo(batchCaptor.capture());
 
         ChangeTaskInfoDTO single = singleCaptor.getValue();
         ChangeTaskInfoDTO batch = batchCaptor.getValue().get(0);
 
         assertEquals(single.getId(), batch.getId());
         assertEquals(single.getEnable(), batch.getEnable());
+    }
+
+    @Test
+    void testChangeTask() {
+        ProduceCommonTaskMessage task = createTask("test", "0 * * * * ?");
+        when(commonTaskBaseService.changeTaskInfo(any())).thenReturn(true);
+
+        service.changeTask(task);
+
+        verify(commonTaskBaseService).changeTaskInfo(any());
+        verify(commonTaskBaseService).unlockTaskById("test");
     }
 
     private ProduceCommonTaskMessage createTask(String id, String cron) {

@@ -82,16 +82,29 @@ executor-sdk (独立项目)  — 客户端 SDK，供业务方引入
 #### 阶段 2：调度执行
 ```
 XXL-Job 定时触发 → ProducerHandler.producerMessage()
-  ├── SELECT FOR UPDATE 锁定到期任务（短事务）
-  ├── lockTaskById → process='processing'
+  ├── lockAndSelectTasks (短事务) → 捡出 process='pending' 的到期任务
+  ├── lockTaskById → process='processing', locked_at=NOW
   ├── 虚拟线程池并行发送 RocketMQ
-  ├── changeTaskInfo → 更新 next_trigger_time
-  └── unlockTasks → process='done'
+  ├── MQ 成功 → changeTaskInfo → next_trigger_time 更新 + process='pending'
+  ├── MQ 失败 → Spring Retry → @Recover → retry_task 补偿表
+  └── unlockTasks → process='pending', locked_at=NULL
 ```
 - XXL-Job 按配置的 Cron 周期触发 `ProducerHandler`
 - 支持分片：`MOD(id, shardTotal) = shardIndex` 实现多节点负载均衡
 - 短事务减少 DB 锁持有时间
 - Java 21 虚拟线程池并行处理，提高吞吐量
+- 所有任务完成后回到 `pending`，为下一轮调度做准备
+
+#### 阶段 2b：高频实时调度（时间轮）
+```
+SchedulerRealtimeService
+  ├── scheduleThread: 每 1s 预读 next_trigger_time 在 5s 内的任务
+  ├── pushTimeRing: 按秒刻度入环
+  └── ringThread: 每秒触发对应刻度的任务 → jobTriggerPoolHelper
+```
+- 适用于秒级精度的高频任务（real_time_task 表）
+- 时间轮内存结构，避免频繁查 DB
+- 支持 misfire 检测：超过 5s 未触发则跳过并刷新 next_trigger_time
 
 #### 阶段 3：Dashboard 运维
 ```
@@ -117,18 +130,80 @@ xxl.job.mq.type=rocketmq     # 默认值，可扩展为 kafka/rabbitmq
 ### 4.3 分片支持
 XXL-Job 原生分片参数传递到 `ProducerHandler`，`lockAndSelectTasksByShard` 通过 `MOD(id, shardCount)` 实现无锁并行扫描。
 
-### 4.4 任务生命周期
+### 4.4 任务状态机
+
+> **调度前提**：`ProducerHandler` 通过 XXL-Job 任务参数 `bizName,bizGroup` 决定扫描范围。
+> SDK 注册的 `bizName`/`bizGroup` 必须与 XXL-Job Admin 中配置的**任务参数完全一致**（字符级匹配），否则任务会永远停留在 `pending` 状态不被执行。
+> 详见 [配置参考 §4](configuration.md#4-xxl-job-admin-调度配置)。
+
+所有任务只有三个稳定状态：`pending` / `processing` / `exception`。任何路径最终回到 `pending`，形成闭环。
+
 ```
-SDK 注册 → enable=1, process=NULL
-    ↓ (调度器扫描)
-lock → process=processing
-    ↓ (MQ 发送成功)
-next_trigger_time 更新 (Cron 模式) 或 enable=0 (一次性模式)
-    ↓
-unlock → process=done
-    ↓ (下次调度周期)
-重新匹配 next_trigger_time 条件，进入下一轮
+               UpsertTaskProcessor         ProducerHandler              ScheduledUnlock
+               ────────────────         ──────────────────           ───────────────
+upsertTask:                             lockAndSelectTasks:
+  process = pending ←──────────┐         process='pending' ──→  lockTaskById
+  locked_at = NULL             │         next_time < now          process=processing
+                               │         enable='1'               locked_at=NOW
+                               │              │
+                               │       ┌──────┴──────┐
+                               │       │ MQ 成功     │ MQ 失败
+                               │       ▼             ▼
+                               │ changeTaskInfo   @Recover
+                               │ process=pending  → retry_task
+                               │ next_time=T2
+                               │       │             │
+                               │       └──────┬──────┘
+                               │              ▼
+                               │       unlockTasks:
+                               │       process=pending
+                               │       locked_at=NULL
+                               │              │
+                               └──────────────┘
+                                    (下次 cron upsert 或超时补偿)
+
+超时补偿路径:
+  processing ──(1min)→ selectTimeoutProcessingTasks
+                     → unlockExceptionTasks
+                       process = pending (AND process='processing' 防竞态)
+                       locked_at = NULL
 ```
+
+**关键设计原则：**
+- `locked_at` 在所有 unlock/upsert 路径上都置 NULL，不留残留锁
+- 超时阈值 1 分钟（`selectTimeoutProcessingTaskIDs`），快速补偿
+- `unlockExceptionTasks` 加 `AND process = 'processing'` 防止覆盖已完成任务
+- `upsetTskInfo` 的 `ON DUPLICATE KEY UPDATE` 包含 `process` 和 `locked_at`，确保新消息可重置状态
+
+### 4.5 消息发送补偿
+
+MQ 发送失败后走 **两层补偿**：
+
+```
+MessageProducer.send()
+  ├── @Retryable (maxAttempts=2, backoff=2s→4s)     ← Spring Retry 即时重试
+  └── 全部失败 → @Recover → retryTaskService         ← 写入 retry_task 表
+
+RetryTaskScheduler (每 1ms 轮询)
+  ├── retry_count 0-3: +10s/次
+  ├── retry_count 4-5: +10min/次
+  ├── retry_count 6-9: +1h/次
+  └── retry_count ≥10: 不再重试 (WHERE retry_count < 10)
+```
+- retry_task 表保留任务序列化参数，重试时直接重新发送 MQ 消息
+- 发送成功则从 retry_task 删除；失败则递增 retry_count 并更新 next_trigger_time
+- 主任务表在 unlockTasks 时已回到 `pending`，超时补偿（1min）也会兜底
+
+### 4.6 对账日志
+
+`task_event_log` 表记录所有状态变更，支持事后对账：
+
+| event_type | from → to | 触发点 |
+|---|---|---|
+| `SCHEDULED` | → pending | 任务注册 / cron 下一轮 |
+| `LOCKED` | pending → processing | 调度锁住 |
+| `UNLOCKED` | processing → pending | 释放回池 |
+| `TIMEOUT_RESET` | processing → pending | 超时补偿 |
 
 ## 5. 项目依赖
 
