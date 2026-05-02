@@ -63,14 +63,32 @@ public class RocketMQMessagePublisher implements MessagePublisher {
             messageBody = "{}";
         }
         Message message = new Message(topic, tag, messageBody.getBytes());
-        try {
-            SendResult result = producer.send(message);
-            logger.info("MQ send result: {}", result);
-        } catch (Exception e) {
-            logger.error("MQ send failed: {}", e.getMessage());
-            return false;
+
+        int maxAttempts = 3;
+        long baseDelay = 2000;
+        for (int attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                SendResult result = producer.send(message);
+                logger.info("MQ send result: {}", result);
+                return true;
+            } catch (Exception e) {
+                if (attempt < maxAttempts - 1) {
+                    long delay = baseDelay * (1L << attempt);
+                    logger.warn("MQ send failed (attempt {}), retrying in {}ms: {}",
+                            attempt + 1, delay, e.getMessage());
+                    try {
+                        Thread.sleep(delay);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        return false;
+                    }
+                } else {
+                    logger.error("MQ send finally failed after {} attempts: {}",
+                            maxAttempts, e.toString());
+                }
+            }
         }
-        return true;
+        return false;
     }
 
     @PreDestroy
