@@ -147,20 +147,10 @@ src/main/java/com/executor/xxljobexecutormqimprove/
 
 ## 📄 许可证
 
-本项目采用 [MIT License](LICENSE) 许可证。
+本项目采用 [Apache License 2.0](LICENSE) 许可证。
 
 ## 🙏 致谢
 
 - [XXL-Job](https://github.com/xuxueli/xxl-job) - 分布式任务调度平台
 - [RocketMQ](https://github.com/apache/rocketmq) - 分布式消息队列
 - [Spring Boot](https://spring.io/projects/spring-boot) - 应用框架
-
-## 📞 联系方式
-
-- 邮箱: 1498377512@qq.com
-- 微信: 19925983329
-- 项目地址: https://github.com/your-username/xxl-job-executor-mq-improve
-
----
-
-如果这个项目对你有帮助，请给个⭐️支持一下！ 

@@ -45,10 +45,3 @@
 ## 功能建议
 
 请描述清楚场景、需求、优先级
-
-## 联系方式
-
-- 邮箱: your-email@example.com
-- 项目地址: https://github.com/your-username/xxl-job-executor-mq-improve
-
-感谢您的贡献！ 
