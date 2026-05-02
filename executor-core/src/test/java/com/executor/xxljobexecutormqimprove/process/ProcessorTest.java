@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Processor 已被 UpsertTaskProcessor 替代，旧测试暂时跳过。
- * TODO: 为 UpsertTaskProcessor 编写新测试。
+ * Processor 已被 TaskRegistrationService 替代，旧测试暂时跳过。
+ * TODO: 为 TaskRegistrationService 编写新测试。
  */
-@Disabled("Processor replaced by UpsertTaskProcessor after dev_time_wheel merge")
+@Disabled("Processor replaced by TaskRegistrationService after dev_time_wheel merge")
 class ProcessorTest {
 
     @Test

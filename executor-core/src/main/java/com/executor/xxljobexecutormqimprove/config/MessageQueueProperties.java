@@ -32,6 +32,9 @@ public class MessageQueueProperties {
     /** Producer: retry times when send failed */
     private int retryTimesWhenSendFailed = 2;
 
+    /** Consumer group for TaskRegistrationService (upsert pool), separate from the general message subscriber */
+    private String upsertGroup = "executorUpsertGroup";
+
     public String getNameserver() {
         return nameserver;
     }
@@ -102,5 +105,13 @@ public class MessageQueueProperties {
 
     public void setRetryTimesWhenSendFailed(int retryTimesWhenSendFailed) {
         this.retryTimesWhenSendFailed = retryTimesWhenSendFailed;
+    }
+
+    public String getUpsertGroup() {
+        return upsertGroup;
+    }
+
+    public void setUpsertGroup(String upsertGroup) {
+        this.upsertGroup = upsertGroup;
     }
 }

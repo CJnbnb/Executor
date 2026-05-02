@@ -139,7 +139,7 @@ XXL-Job 原生分片参数传递到 `ProducerHandler`，`lockAndSelectTasksBySha
 所有任务只有三个稳定状态：`pending` / `processing` / `exception`。任何路径最终回到 `pending`，形成闭环。
 
 ```
-               UpsertTaskProcessor         ProducerHandler              ScheduledUnlock
+               TaskRegistrationService    ProducerHandler              ScheduledUnlock
                ────────────────         ──────────────────           ───────────────
 upsertTask:                             lockAndSelectTasks:
   process = pending ←──────────┐         process='pending' ──→  lockTaskById
