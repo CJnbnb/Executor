@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Sensitive local config ###
+**/application.properties
+!**/application-example.properties
