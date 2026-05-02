@@ -4,10 +4,13 @@ import com.executor.xxljobexecutormqimprove.core.service.RetryTaskService;
 import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.model.entity.RocketMQEntity;
 import jakarta.annotation.PreDestroy;
+import org.apache.rocketmq.acl.common.AclClientRPCHook;
+import org.apache.rocketmq.acl.common.SessionCredentials;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.remoting.RPCHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +37,14 @@ public class MessageProducer {
     private DefaultMQProducer producer;
     @PostConstruct
     public void init() throws MQClientException{
-        producer = new DefaultMQProducer(rocketMQEntity.getProducerGroup());
+        String accessKey = rocketMQEntity.getAccessKey();
+        String secretKey = rocketMQEntity.getSecretKey();
+        if (accessKey != null && !accessKey.isEmpty()) {
+            RPCHook rpcHook = new AclClientRPCHook(new SessionCredentials(accessKey, secretKey));
+            producer = new DefaultMQProducer(rocketMQEntity.getProducerGroup(), rpcHook);
+        } else {
+            producer = new DefaultMQProducer(rocketMQEntity.getProducerGroup());
+        }
         producer.setNamesrvAddr(rocketMQEntity.getAddress());
         producer.start();
         logger.info("---- RocketMQ Producer started ----");

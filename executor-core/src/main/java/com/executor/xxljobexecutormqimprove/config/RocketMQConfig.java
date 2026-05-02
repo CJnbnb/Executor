@@ -22,6 +22,12 @@ public class RocketMQConfig {
     @Value("${xxl.job.producer.produceGroup:executorProduceGroup}")
     private String producerGroup;
 
+    @Value("${xxl.job.process.access-key:}")
+    private String accessKey;
+
+    @Value("${xxl.job.process.secret-key:}")
+    private String secretKey;
+
     @Bean
     public RocketMQEntity rocketInit(){
         logger.info("—————MQ初始化————");
@@ -30,6 +36,8 @@ public class RocketMQConfig {
         rocketMQEntity.setTopic(topic);
         rocketMQEntity.setConsumerGroup(consumerGroup);
         rocketMQEntity.setProducerGroup(producerGroup);
+        rocketMQEntity.setAccessKey(accessKey);
+        rocketMQEntity.setSecretKey(secretKey);
         return rocketMQEntity;
     }
 }

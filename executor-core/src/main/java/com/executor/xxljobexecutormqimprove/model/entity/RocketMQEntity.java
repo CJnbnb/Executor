@@ -8,4 +8,6 @@ public class RocketMQEntity {
     private String consumerGroup;
     private String address;
     private String producerGroup;
+    private String accessKey;
+    private String secretKey;
 }
