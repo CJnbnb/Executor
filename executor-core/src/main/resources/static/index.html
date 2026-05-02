@@ -6,54 +6,60 @@
     <title>Executor Dashboard</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f3f4f6; color: #1f2937; }
-        .header { background: #1f2937; color: #fff; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .header h1 { font-size: 18px; font-weight: 600; }
-        .header .ver { font-size: 12px; color: #9ca3af; }
-        .wrap { max-width: 1300px; margin: 0 auto; padding: 20px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #1f2937; }
 
-        .cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 20px; }
-        .card { background: #fff; border-radius: 8px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); text-align: center; }
-        .card .num { font-size: 24px; font-weight: 700; }
-        .card .label { font-size: 12px; color: #6b7280; margin-top: 4px; }
+        .header { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: #fff; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #3b82f6; }
+        .header h1 { font-size: 18px; font-weight: 600; letter-spacing: -.3px; }
+        .header .ver { font-size: 11px; color: #94a3b8; background: rgba(255,255,255,.1); padding: 3px 10px; border-radius: 10px; }
+        .wrap { max-width: 1340px; margin: 0 auto; padding: 20px 24px; }
+
+        .cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 20px; }
+        .card { background: #fff; border-radius: 10px; padding: 18px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); text-align: center; transition: transform .15s, box-shadow .15s; cursor: default; border: 1px solid #f1f5f9; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+        .card .num { font-size: 26px; font-weight: 700; transition: color .2s; }
+        .card .label { font-size: 12px; color: #64748b; margin-top: 4px; font-weight: 500; }
         .card.c-total .num { color: #3b82f6; }
         .card.c-enabled .num { color: #10b981; }
         .card.c-pending .num { color: #f59e0b; }
         .card.c-processing .num { color: #8b5cf6; }
         .card.c-stuck .num { color: #ef4444; }
-        .card.c-disabled .num { color: #9ca3af; }
-        .card .num.loading { color: #d1d5db !important; font-size: 18px; }
+        .card.c-disabled .num { color: #94a3b8; }
+        .card .num.loading { color: #cbd5e1 !important; font-size: 18px; }
         .card .num.error { color: #ef4444 !important; font-size: 14px; }
 
-        .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-        .toolbar input, .toolbar select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; outline: none; }
-        .toolbar input { width: 160px; }
-        .toolbar select { width: 120px; }
-        .toolbar input:focus, .toolbar select:focus { border-color: #3b82f6; }
-        .toolbar button { padding: 8px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; background: #3b82f6; color: #fff; }
-        .toolbar button:hover { background: #2563eb; }
+        .toolbar { display: flex; gap: 8px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; background: #fff; padding: 12px 16px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #f1f5f9; }
+        .toolbar input, .toolbar select { padding: 7px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; outline: none; background: #f8fafc; transition: border-color .2s, box-shadow .2s; }
+        .toolbar input { width: 150px; }
+        .toolbar select { width: 110px; }
+        .toolbar input:focus, .toolbar select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.12); background: #fff; }
+        .toolbar button { padding: 7px 14px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; transition: background .2s, opacity .2s; }
         .toolbar button:disabled { opacity: .5; cursor: default; }
-        .toolbar .sep { width: 1px; height: 24px; background: #d1d5db; margin: 0 4px; }
+        .toolbar .sep { width: 1px; height: 24px; background: #e2e8f0; margin: 0 6px; }
         .batch-actions { display: none; gap: 6px; align-items: center; }
         .batch-actions button { font-size: 12px; padding: 6px 12px; }
-        .btn-auto { background: #059669 !important; }
-        .btn-auto.off { background: #6b7280 !important; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-muted { background: #64748b; color: #fff; }
+        .btn-muted:hover { background: #475569; }
+        .btn-auto { background: #059669 !important; color: #fff; }
+        .btn-auto.off { background: #94a3b8 !important; }
 
-        .box { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow: hidden; }
+        .box { background: #fff; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; border: 1px solid #f1f5f9; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f9fafb; padding: 10px 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; white-space: nowrap; user-select: none; }
+        th { background: #f8fafc; padding: 11px 14px; text-align: left; font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; white-space: nowrap; user-select: none; font-size: 12px; text-transform: uppercase; letter-spacing: .3px; }
         th.sortable { cursor: pointer; }
-        th.sortable:hover { background: #f3f4f6; }
-        th .sort-arrow { margin-left: 4px; font-size: 11px; }
-        td { padding: 8px 12px; border-bottom: 1px solid #f3f4f6; }
-        tr:hover td { background: #f9fafb; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        th.sortable:hover { background: #f1f5f9; color: #1e293b; }
+        th .sort-arrow { margin-left: 4px; font-size: 10px; }
+        td { padding: 10px 14px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:hover td { background: #f8fafc; }
+        .tag { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; letter-spacing: .2px; }
         .tag-on { background: #d1fae5; color: #065f46; }
         .tag-off { background: #fee2e2; color: #991b1b; }
+        .tag-pending { background: #f3f4f6; color: #6b7280; }
         .tag-processing { background: #ede9fe; color: #6d28d9; }
         .tag-done { background: #dbeafe; color: #1e40af; }
-        .tag-stuck { background: #fee2e2; color: #991b1b; }
-        .btn-sm { padding: 4px 10px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 0 2px; }
+        .tag-exception { background: #fee2e2; color: #991b1b; }
+        .btn-sm { padding: 4px 12px; border: none; border-radius: 5px; font-size: 11px; cursor: pointer; margin: 0 2px; font-weight: 500; transition: background .15s; }
         .btn-sm:disabled { opacity: .5; cursor: default; }
         .btn-toggle { background: #f59e0b; color: #fff; }
         .btn-toggle:hover:not(:disabled) { background: #d97706; }
@@ -62,30 +68,30 @@
         .btn-release { background: #8b5cf6; color: #fff; }
         .btn-release:hover:not(:disabled) { background: #7c3aed; }
 
-        .pager { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; font-size: 13px; color: #6b7280; }
-        .pager button { padding: 6px 14px; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; }
+        .pager { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-size: 13px; color: #64748b; border-top: 1px solid #f1f5f9; }
+        .pager button { padding: 6px 14px; border: 1px solid #e2e8f0; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; transition: background .15s; }
         .pager button:disabled { opacity: .4; cursor: default; }
-        .pager button:hover:not(:disabled) { background: #f3f4f6; }
-        .empty { text-align: center; padding: 40px; color: #9ca3af; }
-        .clickable { cursor: pointer; color: #3b82f6; }
-        .clickable:hover { text-decoration: underline; }
+        .pager button:hover:not(:disabled) { background: #f1f5f9; }
+        .empty { text-align: center; padding: 48px; color: #94a3b8; font-size: 14px; }
+        .clickable { cursor: pointer; color: #3b82f6; font-weight: 500; }
+        .clickable:hover { text-decoration: underline; color: #2563eb; }
 
         /* Modal */
-        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-overlay { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15,23,42,.5); backdrop-filter: blur(2px); justify-content: center; align-items: center; }
         .modal-overlay.show { display: flex; }
-        .modal { background: #fff; border-radius: 10px; width: 560px; max-width: 90vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 24px rgba(0,0,0,.18); }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e5e7eb; }
-        .modal-header h3 { font-size: 16px; }
-        .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: #9ca3af; padding: 4px 8px; }
-        .modal-close:hover { color: #1f2937; }
-        .modal-body { padding: 16px 20px; }
-        .modal-body .kv { display: flex; margin-bottom: 10px; font-size: 13px; }
-        .modal-body .kv .k { width: 110px; color: #6b7280; flex-shrink: 0; }
-        .modal-body .kv .v { color: #1f2937; word-break: break-all; }
-        .modal-body .kv .v code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12px; max-height: 150px; overflow-y: auto; display: block; white-space: pre-wrap; }
-        .modal-footer { padding: 12px 20px; border-top: 1px solid #e5e7eb; text-align: right; }
+        .modal { background: #fff; border-radius: 12px; width: 580px; max-width: 92vw; max-height: 85vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.16); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; border-radius: 12px 12px 0 0; }
+        .modal-header h3 { font-size: 16px; color: #1e293b; }
+        .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: #94a3b8; padding: 4px 8px; border-radius: 6px; transition: color .15s, background .15s; }
+        .modal-close:hover { color: #1e293b; background: #e2e8f0; }
+        .modal-body { padding: 18px 22px; }
+        .modal-body .kv { display: flex; margin-bottom: 10px; font-size: 13px; align-items: flex-start; }
+        .modal-body .kv .k { width: 100px; color: #64748b; flex-shrink: 0; font-weight: 500; }
+        .modal-body .kv .v { color: #1e293b; word-break: break-all; }
+        .modal-body .kv .v code { background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 12px; max-height: 150px; overflow-y: auto; display: block; white-space: pre-wrap; border: 1px solid #e2e8f0; }
+        .modal-footer { padding: 12px 22px; border-top: 1px solid #e2e8f0; text-align: right; background: #f8fafc; border-radius: 0 0 12px 12px; }
 
-        .toast { position: fixed; top: 20px; right: 20px; z-index: 2000; background: #1f2937; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; }
+        .toast { position: fixed; top: 20px; right: 20px; z-index: 2000; background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: opacity .3s; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,.15); }
         .toast.show { opacity: 1; }
         .toast.error { background: #ef4444; }
     </style>
@@ -104,7 +110,7 @@
         <div class="card c-enabled"><div class="num" id="stat-enabled">-</div><div class="label">已启用</div></div>
         <div class="card c-pending"><div class="num" id="stat-pending">-</div><div class="label">待执行</div></div>
         <div class="card c-processing"><div class="num" id="stat-processing">-</div><div class="label">处理中</div></div>
-        <div class="card c-stuck"><div class="num" id="stat-stuck">-</div><div class="label">卡住(&gt;5min)</div></div>
+        <div class="card c-stuck"><div class="num" id="stat-stuck">-</div><div class="label">卡住(&gt;1min)</div></div>
         <div class="card c-disabled"><div class="num" id="stat-disabled">-</div><div class="label">已禁用</div></div>
     </div>
 
@@ -122,7 +128,7 @@
             <option value="pending">待处理</option>
             <option value="processing">处理中</option>
             <option value="stuck">卡住</option>
-            <option value="done">已完成</option>
+            <option value="exception">异常</option>
         </select>
         <button onclick="search()">查询</button>
         <button onclick="resetSearch()" style="background:#6b7280">重置</button>
@@ -257,12 +263,10 @@ function loadTasks() {
                 let processTag = '';
                 if (t.process === 'processing') {
                     processTag = '<span class="tag tag-processing">处理中</span>';
-                } else if (t.process === 'done') {
-                    processTag = '<span class="tag tag-done">已完成</span>';
                 } else if (t.process === 'pending') {
-                    processTag = '<span class="tag" style="background:#f3f4f6;color:#6b7280">待处理</span>';
+                    processTag = '<span class="tag tag-pending">待处理</span>';
                 } else if (t.process === 'exception') {
-                    processTag = '<span class="tag tag-stuck">异常</span>';
+                    processTag = '<span class="tag tag-exception">异常</span>';
                 } else {
                     processTag = '<span class="tag">' + esc(t.process || '') + '</span>';
                 }
