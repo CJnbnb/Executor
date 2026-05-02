@@ -1,8 +1,8 @@
 package com.executor.xxljobexecutormqimprove.core.store;
 
-import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 
 import java.util.List;
 
@@ -24,8 +24,4 @@ public interface TaskStore {
     void batchUpdateTaskTriggerInfo(List<ChangeTaskInfoDTO> list);
 
     int deleteDisabledTasks();
-
-    int releaseStaleProcessing(int stuckMinutes);
-
-    int deleteStaleEnabled(int staleDays);
 }

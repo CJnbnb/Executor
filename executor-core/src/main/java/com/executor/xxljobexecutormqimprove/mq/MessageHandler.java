@@ -1,6 +1,6 @@
 package com.executor.xxljobexecutormqimprove.mq;
 
-import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.model.dto.ProcessCommonTaskDTO;
 
 @FunctionalInterface
 public interface MessageHandler {

@@ -1,6 +1,6 @@
 package com.executor.xxljobexecutormqimprove.dashboard.store;
 
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
 
 import java.util.List;
 import java.util.Map;

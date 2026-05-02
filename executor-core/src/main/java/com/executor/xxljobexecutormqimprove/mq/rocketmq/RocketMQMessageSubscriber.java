@@ -1,7 +1,7 @@
 package com.executor.xxljobexecutormqimprove.mq.rocketmq;
 
 import com.alibaba.fastjson.JSONObject;
-import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
+import com.executor.xxljobexecutormqimprove.model.dto.ProcessCommonTaskDTO;
 import com.executor.xxljobexecutormqimprove.mq.MessageHandler;
 import com.executor.xxljobexecutormqimprove.mq.MessageSubscriber;
 import org.apache.rocketmq.acl.common.AclClientRPCHook;

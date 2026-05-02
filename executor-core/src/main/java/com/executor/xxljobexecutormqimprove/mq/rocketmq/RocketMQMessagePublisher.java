@@ -1,6 +1,6 @@
 package com.executor.xxljobexecutormqimprove.mq.rocketmq;
 
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.mq.MessagePublisher;
 import org.apache.rocketmq.acl.common.AclClientRPCHook;
 import org.apache.rocketmq.acl.common.SessionCredentials;

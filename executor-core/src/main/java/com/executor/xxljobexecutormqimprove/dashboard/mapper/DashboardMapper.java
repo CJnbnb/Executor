@@ -1,6 +1,6 @@
 package com.executor.xxljobexecutormqimprove.dashboard.mapper;
 
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

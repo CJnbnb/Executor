@@ -1,7 +1,7 @@
 package com.executor.xxljobexecutormqimprove.dashboard.service;
 
 import com.executor.xxljobexecutormqimprove.dashboard.store.DashboardStore;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

@@ -1,9 +1,8 @@
 package com.executor.xxljobexecutormqimprove.mapper;
 
-import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.ProcessCommonTaskDTO;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -33,11 +32,11 @@ public interface CommonTaskMapper {
 
     int unlockTasks(@Param("ids") List<String> ids);
 
+    int unlockTaskById(@Param("id") String id);
+
     boolean updateTaskTriggerInfo(ChangeTaskInfoDTO dto);
     void batchUpdateTaskTriggerInfo(@Param("list") List<ChangeTaskInfoDTO> list);
+    List<String> selectTimeoutProcessingTaskIDs(@Param("now") Long now);
+    int unlockExceptionTasks(@Param("ids") List<String> ids);
     int deleteDisabledTasks();
-
-    int releaseStaleProcessing(@Param("stuckMinutes") int stuckMinutes);
-
-    int deleteStaleEnabled(@Param("threshold") long threshold);
 }

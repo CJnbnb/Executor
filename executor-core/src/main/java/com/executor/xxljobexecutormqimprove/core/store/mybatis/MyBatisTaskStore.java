@@ -1,9 +1,9 @@
 package com.executor.xxljobexecutormqimprove.core.store.mybatis;
 
 import com.executor.xxljobexecutormqimprove.core.store.TaskStore;
-import com.executor.xxljobexecutormqimprove.entity.ChangeTaskInfoDTO;
-import com.executor.xxljobexecutormqimprove.entity.CommonTaskEntity;
-import com.executor.xxljobexecutormqimprove.entity.ProduceCommonTaskMessage;
+import com.executor.xxljobexecutormqimprove.model.dto.ChangeTaskInfoDTO;
+import com.executor.xxljobexecutormqimprove.model.entity.CommonTaskEntity;
+import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.mapper.CommonTaskMapper;
 
 import java.util.List;
@@ -57,14 +57,4 @@ public class MyBatisTaskStore implements TaskStore {
         return mapper.deleteDisabledTasks();
     }
 
-    @Override
-    public int releaseStaleProcessing(int stuckMinutes) {
-        return mapper.releaseStaleProcessing(stuckMinutes);
-    }
-
-    @Override
-    public int deleteStaleEnabled(int staleDays) {
-        long threshold = System.currentTimeMillis() - (long) staleDays * 24 * 3600 * 1000;
-        return mapper.deleteStaleEnabled(threshold);
-    }
 }
