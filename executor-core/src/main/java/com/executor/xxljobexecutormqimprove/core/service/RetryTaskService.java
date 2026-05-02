@@ -4,7 +4,7 @@ import com.executor.xxljobexecutormqimprove.core.base.RetryTaskBaseService;
 import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
 import com.executor.xxljobexecutormqimprove.model.entity.RetryTaskEntity;
 import com.executor.xxljobexecutormqimprove.model.dto.RetryTaskUpdateDTO;
-import com.executor.xxljobexecutormqimprove.core.producer.MessageProducer;
+import com.executor.xxljobexecutormqimprove.mq.MessagePublisher;
 import com.executor.xxljobexecutormqimprove.util.CalculateRetryTaskUtil;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
@@ -24,11 +24,8 @@ public class RetryTaskService {
     @Autowired
     private Gson gson;
 
-    /*
-    构造函数避免Spring的ReTask代理
-    改一下发送
-     */
-    private static final MessageProducer messageProducer = new MessageProducer();
+    @Autowired
+    private MessagePublisher messagePublisher;
 
     public void recordTaskByTask(ProduceCommonTaskMessage produceCommonTaskMessage){
         RetryTaskEntity retryTaskEntity = new RetryTaskEntity();
@@ -49,7 +46,7 @@ public class RetryTaskService {
         }
         for (RetryTaskEntity retryTaskEntity : retryTaskEntities){
             try {
-                boolean isSuccess = messageProducer.send(gson.fromJson(retryTaskEntity.getArgs(), ProduceCommonTaskMessage.class));
+                boolean isSuccess = messagePublisher.send(gson.fromJson(retryTaskEntity.getArgs(), ProduceCommonTaskMessage.class));
                 if (Boolean.TRUE.equals(isSuccess)){
                     retryTaskBaseService.removeRetryTask(retryTaskEntity.getId());
                 }
