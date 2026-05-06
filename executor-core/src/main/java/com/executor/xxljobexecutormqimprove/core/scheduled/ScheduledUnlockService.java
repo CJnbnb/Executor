@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class ScheduledUnlockService {
@@ -33,6 +34,11 @@ public class ScheduledUnlockService {
                     }
                 } catch (Exception e) {
                     logger.error("补偿任务失败{}", e);
+                }
+                try {
+                    TimeUnit.SECONDS.sleep(5);
+                } catch (InterruptedException ie) {
+                    break;
                 }
             }
         });
