@@ -14,6 +14,9 @@ public interface RealtimeTaskMapper {
     // 更新任务触发信息
     boolean updateTaskTriggerInfo(RealTimeTaskEntity realTimeTaskEntity);
 
+    // 批量更新任务触发信息
+    int batchUpdateTaskTriggerInfo(List<RealTimeTaskEntity> list);
+
     // 查询所有可调度任务（可用于时间轮预读）
     List<RealTimeTaskEntity> selectSchedulableTasks(@Param("end") Long end, @Param("limit") Integer limit);
 

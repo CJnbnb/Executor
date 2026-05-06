@@ -85,13 +85,26 @@
     </update>
 
     <update id="batchUpdateTaskTriggerInfo" parameterType="list">
-        <foreach collection="list" item="item" separator=";">
-            UPDATE user_scheduled_common_task
-            SET last_trigger_time = #{item.lastTriggerTime},
-            next_trigger_time = #{item.nextTriggerTime},
-            enable = #{item.enable},
-            process = 'pending'
-            WHERE id = #{item.id}
+        UPDATE user_scheduled_common_task
+        SET last_trigger_time = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.lastTriggerTime}
+            </foreach>
+        END,
+        next_trigger_time = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.nextTriggerTime}
+            </foreach>
+        END,
+        enable = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.enable}
+            </foreach>
+        END,
+        process = 'pending'
+        WHERE id IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.id}
         </foreach>
     </update>
 

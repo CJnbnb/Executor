@@ -38,6 +38,36 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 批量更新任务触发信息 -->
+    <update id="batchUpdateTaskTriggerInfo" parameterType="list">
+        UPDATE user_scheduled_realtime_task
+        SET last_trigger_time = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.lastTriggerTime}
+            </foreach>
+        END,
+        next_trigger_time = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.nextTriggerTime}
+            </foreach>
+        END,
+        enable = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.enable}
+            </foreach>
+        END,
+        update_at = CASE id
+            <foreach collection="list" item="item">
+                WHEN #{item.id} THEN #{item.updateAt}
+            </foreach>
+        END,
+        process = 'pending'
+        WHERE id IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
     <!-- 查询所有可调度任务（时间轮预读用） -->
     <select id="selectSchedulableTasks" resultType="com.executor.xxljobexecutormqimprove.model.entity.RealTimeTaskEntity">
         SELECT * FROM user_scheduled_realtime_task
@@ -51,7 +81,6 @@
         SELECT * FROM user_scheduled_realtime_task
         WHERE id = #{id}
     </select>
-
 
 
     <!-- 其他SQL可参考CommonTaskMapper.xml按需添加 -->
