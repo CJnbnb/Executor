@@ -27,7 +27,7 @@ public class RetryTaskScheduler {
         logger.info("------init RetryTaskScheduler-------");
         executor.scheduleWithFixedDelay(
                 () -> retryTaskService.retry(),
-                0, 1, TimeUnit.MILLISECONDS
+                0, 5, TimeUnit.SECONDS
         );
     }
 
