@@ -9,7 +9,7 @@ import com.executor.xxljobexecutormqimprove.mapper.RealtimeTaskMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.annotation.Resource;
-import org.quartz.CronExpression;
+import com.executor.xxljobexecutormqimprove.util.CronTimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,10 +138,8 @@ public class SchedulerRealtimeService {
 
                             }
 
-                            // 3、update trigger info
-                            for (RealTimeTaskEntity realTimeTask: scheduleList) {
-                                realtimeTaskMapper.updateTaskTriggerInfo(realTimeTask);
-                            }
+                            // 3、update trigger info（批量，减少锁持有时间）
+                            realtimeTaskMapper.batchUpdateTaskTriggerInfo(scheduleList);
 
                         } else {
                             preReadSuc = false;
@@ -234,15 +232,13 @@ public class SchedulerRealtimeService {
                             }
                         }
 
-                        logger.debug(">>>>>>>>>>> xxl-job, time-ring beat : " + nowSecond + " = " + Arrays.asList(ringItemData) );
+                        logger.debug(">>>>>>>>>>> xxl-job, time-ring beat : " + nowSecond + " = " + ringItemData );
                         if (ringItemData.size() > 0) {
-                            // TODO
-                            // do trigger
-                            for (String jobId: ringItemData) {
-                                // do trigger
+                            // 去重，防止同一 job 被重复触发
+                            List<String> distinctIds = ringItemData.stream().distinct().toList();
+                            for (String jobId: distinctIds) {
                                 jobTriggerPoolHelper.trigger(jobId);
                             }
-                            ringItemData.clear();
                         }
                     }catch (Throwable e) {
                         if (!ringThreadToStop) {
@@ -278,12 +274,7 @@ public class SchedulerRealtimeService {
 
 
     private void pushTimeRing(int ringSecond, String jobId){
-        // push async ring
-        List<String> ringItemData = ringData.get(ringSecond);
-        if (ringItemData == null) {
-            ringItemData = new ArrayList<String>();
-            ringData.put(ringSecond, ringItemData);
-        }
+        List<String> ringItemData = ringData.computeIfAbsent(ringSecond, k -> new ArrayList<>());
         ringItemData.add(jobId);
 
         logger.debug(">>>>>>>>>>> xxl-job, schedule push time-ring : " + ringSecond + " = " + Arrays.asList(ringItemData) );
@@ -351,8 +342,7 @@ public class SchedulerRealtimeService {
 
     // ---------------------- tools ----------------------
     private long getNextTriggerTime(String cronExpr, long fromTime) throws ParseException {
-        CronExpression cron = new CronExpression(cronExpr);
-        Date next = cron.getNextValidTimeAfter(new Date(fromTime));
-        return next != null ? next.getTime() : TriggerEnum.NULL_NEXT_TRIGGER_TIME;
+        long next = CronTimeUtil.getNextTriggerTime(cronExpr, fromTime);
+        return next != -1 ? next : TriggerEnum.NULL_NEXT_TRIGGER_TIME;
     }
 }
