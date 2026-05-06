@@ -1,11 +1,8 @@
 package com.executor.xxljobexecutormqimprove.core.schedulerhandler;
 
-import com.executor.xxljobexecutormqimprove.Enum.ProcessEnum;
-import com.executor.xxljobexecutormqimprove.core.base.TaskEventLogBaseService;
 import com.executor.xxljobexecutormqimprove.core.service.CommonTaskService;
 import com.executor.xxljobexecutormqimprove.core.store.TaskStore;
 import com.executor.xxljobexecutormqimprove.model.ProduceCommonTaskMessage;
-import com.executor.xxljobexecutormqimprove.model.entity.TaskEventLog;
 import com.executor.xxljobexecutormqimprove.metrics.MetricsCollector;
 import com.executor.xxljobexecutormqimprove.mq.MessagePublisher;
 import com.executor.xxljobexecutormqimprove.util.ValidateParamUtil;
@@ -22,7 +19,6 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
@@ -45,9 +41,6 @@ public class ProducerHandler {
 
     @Autowired
     private CommonTaskService commonTaskService;
-
-    @Autowired
-    private TaskEventLogBaseService logService;
 
     @Autowired
     private MetricsCollector metricsCollector;
@@ -113,7 +106,6 @@ public class ProducerHandler {
             ids = produceCommonTaskMessageList.stream().map(ProduceCommonTaskMessage::getId).collect(Collectors.toList());
             taskStore.lockTaskById(ids);
             transactionManager.commit(status);
-            logLocked(produceCommonTaskMessageList);
             logger.info("锁定事务成功");
         }catch (Exception e){
             transactionManager.rollback(status);
@@ -123,67 +115,45 @@ public class ProducerHandler {
 
 
         /**
-         * 用线程池优化业务执行速度
+         * 用线程池优化业务执行速度 — 并发发送 MQ，不做逐条 DB 更新
          */
         List<Future<Boolean>> futures = new ArrayList<>();
         List<String> attemptedIds = new ArrayList<>();
-        //发送业务MQ
         for (ProduceCommonTaskMessage task : produceCommonTaskMessageList) {
             attemptedIds.add(task.getId());
             futures.add(virtualThreadExecutor.submit(() -> {
                 boolean isSuccess = messagePublisher.send(task);
                 logger.info("已发送任务: {}", task.getTaskName());
-                if (isSuccess) {
-                    boolean taskSuccess = commonTaskService.changeTaskInfo(task);
-                    if (taskSuccess) {
-                        logger.info("更改任务下次执行时间成功");
-                    }
-                }
                 metricsCollector.recordProduced(isSuccess);
                 return isSuccess;
             }));
         }
-        //阻塞等待
-        for (Future<Boolean> future : futures) {
+
+        // 等待全部完成，收集 MQ 发送成功的任务
+        List<ProduceCommonTaskMessage> successTasks = new ArrayList<>();
+        for (int i = 0; i < futures.size(); i++) {
             try {
-                future.get();
+                if (Boolean.TRUE.equals(futures.get(i).get())) {
+                    successTasks.add(produceCommonTaskMessageList.get(i));
+                }
             } catch (Exception e) {
                 logger.error("MQ异步任务发送异常", e);
             }
         }
 
+        // 批量更新触发信息
+        if (!successTasks.isEmpty()) {
+            try {
+                commonTaskService.batchChangeTaskInfo(successTasks);
+                logger.info("批量更改 {} 个任务下次执行时间成功", successTasks.size());
+            } catch (Exception e) {
+                logger.error("批量更新触发信息失败: {}", e.getMessage());
+            }
+        }
+
         // 4. 解锁（回写状态，所有尝试过的任务都解锁，失败的可下次重试）
         taskStore.unlockTasks(attemptedIds);
-        logUnlock(produceCommonTaskMessageList);
 
-    }
-
-    private void logLocked(List<ProduceCommonTaskMessage> tasks) {
-        LocalDateTime now = LocalDateTime.now();
-        for (ProduceCommonTaskMessage t : tasks) {
-            TaskEventLog log = new TaskEventLog();
-            log.setTaskId(t.getId());
-            log.setTaskName(t.getTaskName());
-            log.setEventType("LOCKED");
-            log.setFromStatus(ProcessEnum.PENDING);
-            log.setToStatus(ProcessEnum.PROCESSING);
-            log.setEventTime(now);
-            logService.insert(log);
-        }
-    }
-
-    private void logUnlock(List<ProduceCommonTaskMessage> tasks) {
-        LocalDateTime now = LocalDateTime.now();
-        for (ProduceCommonTaskMessage t : tasks) {
-            TaskEventLog log = new TaskEventLog();
-            log.setTaskId(t.getId());
-            log.setTaskName(t.getTaskName());
-            log.setEventType("UNLOCKED");
-            log.setFromStatus(ProcessEnum.PROCESSING);
-            log.setToStatus(ProcessEnum.PENDING);
-            log.setEventTime(now);
-            logService.insert(log);
-        }
     }
 
 }
