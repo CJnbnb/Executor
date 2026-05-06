@@ -55,6 +55,7 @@ public class RetryTaskService {
                 int retryCount = retryTaskEntity.getRetryCount() + 1;
                 retryTaskUpdateDTO.setRetryCount(retryCount);
                 retryTaskUpdateDTO.setNextTriggerTime(CalculateRetryTaskUtil.calculateNextTriggerTimestamp(retryCount,retryTaskEntity.getNextTriggerTime()));
+                //todo 看看存不存在bug需要fix
                 retryTaskUpdateDTO.setId(retryTaskUpdateDTO.getId());
                 retryTaskBaseService.updateRecord(retryTaskUpdateDTO);
             }

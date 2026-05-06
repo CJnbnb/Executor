@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Component
 public class TaskEventLogBaseService {
@@ -16,6 +17,12 @@ public class TaskEventLogBaseService {
 
     public void insert(TaskEventLog log) {
         mapper.insert(log);
+    }
+
+    public void batchInsert(List<TaskEventLog> logs) {
+        if (logs != null && !logs.isEmpty()) {
+            mapper.batchInsert(logs);
+        }
     }
 
     public void log(ProduceCommonTaskMessage task, String eventType, String fromStatus, String toStatus, String msg) {
