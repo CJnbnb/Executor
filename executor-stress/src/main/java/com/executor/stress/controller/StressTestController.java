@@ -214,9 +214,6 @@ public class StressTestController {
             attemptedIds.add(task.getId());
             futures.add(virtualThreadExecutor.submit(() -> {
                 boolean isSuccess = messagePublisher.send(task);
-                if (isSuccess) {
-                    commonTaskService.changeTaskInfo(task);
-                }
                 metricsCollector.recordProduced(isSuccess);
                 return isSuccess;
             }));
@@ -225,14 +222,22 @@ public class StressTestController {
         // Wait for all sends
         int successCount = 0;
         int failCount = 0;
-        for (Future<Boolean> future : futures) {
+        List<ProduceCommonTaskMessage> successTasks = new ArrayList<>();
+        for (int i = 0; i < futures.size(); i++) {
             try {
-                if (future.get()) successCount++;
-                else failCount++;
+                if (futures.get(i).get()) {
+                    successTasks.add(tasks.get(i));
+                    successCount++;
+                } else {
+                    failCount++;
+                }
             } catch (Exception e) {
                 failCount++;
                 log.error("MQ send failed", e);
             }
+        }
+        if (!successTasks.isEmpty()) {
+            commonTaskService.batchChangeTaskInfo(successTasks);
         }
 
         // Unlock
@@ -305,19 +310,26 @@ public class StressTestController {
                 attemptedIds.add(task.getId());
                 futures.add(virtualThreadExecutor.submit(() -> {
                     boolean ok = messagePublisher.send(task);
-                    if (ok) commonTaskService.changeTaskInfo(task);
                     metricsCollector.recordProduced(ok);
                     return ok;
                 }));
             }
 
-            for (Future<Boolean> f : futures) {
+            List<ProduceCommonTaskMessage> successTasks = new ArrayList<>();
+            for (int i = 0; i < futures.size(); i++) {
                 try {
-                    if (f.get()) totalSuccess++;
-                    else totalFail++;
+                    if (futures.get(i).get()) {
+                        successTasks.add(tasks.get(i));
+                        totalSuccess++;
+                    } else {
+                        totalFail++;
+                    }
                 } catch (Exception e) {
                     totalFail++;
                 }
+            }
+            if (!successTasks.isEmpty()) {
+                commonTaskService.batchChangeTaskInfo(successTasks);
             }
 
             taskStore.unlockTasks(attemptedIds);

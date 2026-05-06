@@ -838,19 +838,26 @@ public class LayerTestController {
                 attemptedIds.add(task.getId());
                 futures.add(virtualThreadExecutor.submit(() -> {
                     boolean ok = messagePublisher.send(task);
-                    if (ok) commonTaskService.changeTaskInfo(task);
                     metricsCollector.recordProduced(ok);
                     return ok;
                 }));
             }
 
-            for (Future<Boolean> f : futures) {
+            List<ProduceCommonTaskMessage> successTasks = new ArrayList<>();
+            for (int i = 0; i < futures.size(); i++) {
                 try {
-                    if (f.get()) success++;
-                    else fail++;
+                    if (futures.get(i).get()) {
+                        successTasks.add(tasks.get(i));
+                        success++;
+                    } else {
+                        fail++;
+                    }
                 } catch (Exception e) {
                     fail++;
                 }
+            }
+            if (!successTasks.isEmpty()) {
+                commonTaskService.batchChangeTaskInfo(successTasks);
             }
 
             taskStore.unlockTasks(attemptedIds);
