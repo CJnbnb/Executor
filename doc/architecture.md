@@ -13,7 +13,8 @@ Executor 是一个**基于 RocketMQ 的任务调度执行引擎**，对 XXL-Job 
 ```
 executor-parent (pom.xml)
 ├── executor-core       — 调度引擎核心（Spring Boot 应用）
-└── executor-example    — SDK 使用示例（独立应用）
+├── executor-example    — SDK 使用示例（独立应用）
+└── executor-stress     — 压力测试模块
 
 executor-sdk (独立项目)  — 客户端 SDK，供业务方引入
 ```
@@ -23,6 +24,7 @@ executor-sdk (独立项目)  — 客户端 SDK，供业务方引入
 | `executor-sdk` | 任务注册客户端 | 外部业务团队 |
 | `executor-core` | 调度 + 消费 + Dashboard | 中台团队部署 |
 | `executor-example` | SDK 使用演示 | 开发者参考 |
+| `executor-stress` | 压力测试 | 中台团队内部 |
 
 ## 3. 核心流程
 
@@ -85,7 +87,7 @@ XXL-Job 定时触发 → ProducerHandler.producerMessage()
   ├── lockAndSelectTasks (短事务) → 捡出 process='pending' 的到期任务
   ├── lockTaskById → process='processing', locked_at=NOW
   ├── 虚拟线程池并行发送 RocketMQ
-  ├── MQ 成功 → changeTaskInfo → next_trigger_time 更新 + process='pending'
+  ├── MQ 成功 → batchChangeTaskInfo → next_trigger_time 更新 + process='pending'
   ├── MQ 失败 → Spring Retry → @Recover → retry_task 补偿表
   └── unlockTasks → process='pending', locked_at=NULL
 ```
@@ -115,17 +117,11 @@ SchedulerRealtimeService
 
 ## 4. 关键设计决策
 
-### 4.1 存储抽象层
-`TaskStore` / `DashboardStore` 接口 + MyBatis 实现。可在 `application.properties` 中切换：
-```properties
-xxl.job.store.type=mybatis   # 默认值，可扩展为 jpa/jdbc
-```
+### 4.1 存储层
+`TaskStore` / `DashboardStore` 接口 + MyBatis 实现，直接通过 Mapper 操作 MySQL。
 
-### 4.2 消息队列抽象层
-`MessagePublisher` / `MessageSubscriber` / `MessageHandler` 接口 + RocketMQ 实现：
-```properties
-xxl.job.mq.type=rocketmq     # 默认值，可扩展为 kafka/rabbitmq
-```
+### 4.2 消息队列层
+`MessagePublisher` / `MessageSubscriber` / `MessageHandler` 接口 + RocketMQ 实现。
 
 ### 4.3 分片支持
 XXL-Job 原生分片参数传递到 `ProducerHandler`，`lockAndSelectTasksByShard` 通过 `MOD(id, shardCount)` 实现无锁并行扫描。
@@ -149,7 +145,7 @@ upsertTask:                             lockAndSelectTasks:
                                │       ┌──────┴──────┐
                                │       │ MQ 成功     │ MQ 失败
                                │       ▼             ▼
-                               │ changeTaskInfo   @Recover
+                               │ batchChangeTaskInfo   @Recover
                                │ process=pending  → retry_task
                                │ next_time=T2
                                │       │             │

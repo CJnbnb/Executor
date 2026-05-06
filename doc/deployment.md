@@ -17,7 +17,7 @@ mysql -u root -p < doc/schema.sql
 ```
 
 执行后会在数据库中创建：
-- 数据库：`xxl_job_executor`
+- 数据库：`xxl_job_executor_mq`
 - 表：`user_scheduled_common_task`
 
 ## 3. 构建项目
@@ -38,7 +38,7 @@ mvn clean package -DskipTests
 cd Executor/executor-core
 
 # 设置环境变量
-export DB_URL=jdbc:mysql://your-db-host:3306/xxl_job_executor?useSSL=false&serverTimezone=Asia/Shanghai
+export DB_URL=jdbc:mysql://your-db-host:3306/xxl_job_executor_mq?useSSL=false&serverTimezone=Asia/Shanghai
 export DB_USERNAME=your_user
 export DB_PASSWORD=your_password
 export ROCKETMQ_SECRET_KEY=your_rocketmq_secret

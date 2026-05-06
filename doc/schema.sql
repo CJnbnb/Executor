@@ -3,11 +3,11 @@
 -- 适用: MySQL 8.0+
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS xxl_job_executor
+CREATE DATABASE IF NOT EXISTS xxl_job_executor_mq
     DEFAULT CHARACTER SET utf8mb4
     DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE xxl_job_executor;
+USE xxl_job_executor_mq;
 
 -- -----------------------------------------------------------
 -- 通用定时任务表

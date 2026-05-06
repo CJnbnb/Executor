@@ -44,7 +44,7 @@ server.port=8081
 
 | 配置项 | 说明 | 示例值 |
 |--------|------|--------|
-| `spring.datasource.url` | MySQL 连接 | `jdbc:mysql://localhost:3306/xxl_job_executor?...` |
+| `spring.datasource.url` | MySQL 连接 | `jdbc:mysql://localhost:3306/xxl_job_executor_mq?...` |
 | `spring.datasource.username` | 数据库用户名 | `root` |
 | `spring.datasource.password` | 数据库密码 | **务必通过环境变量覆盖** |
 | `spring.datasource.driver-class-name` | JDBC 驱动 | `com.mysql.cj.jdbc.Driver` |
@@ -56,13 +56,6 @@ server.port=8081
 | `mybatis.mapper-locations` | Mapper XML 路径 | `classpath:/mapper/*Mapper.xml` |
 | `mybatis.configuration.map-underscore-to-camel-case` | 驼峰映射 | `true` |
 
-### 存储 / MQ 实现选择
-
-| 配置项 | 说明 | 默认值 |
-|--------|------|--------|
-| `xxl.job.store.type` | 存储实现 | `mybatis` |
-| `xxl.job.mq.type` | 消息队列实现 | `rocketmq` |
-
 ## 2. 环境变量覆盖
 
 所有敏感配置支持通过环境变量覆盖，优先级：**环境变量 > 配置文件默认值**。
@@ -73,7 +66,7 @@ export DB_PASSWORD=your_db_password
 export ROCKETMQ_SECRET_KEY=your_rocketmq_secret
 
 # 可选覆盖
-export DB_URL=jdbc:mysql://prod-host:3306/xxl_job_executor?useSSL=false&serverTimezone=Asia/Shanghai
+export DB_URL=jdbc:mysql://prod-host:3306/xxl_job_executor_mq?useSSL=false&serverTimezone=Asia/Shanghai
 export DB_USERNAME=prod_user
 export ROCKETMQ_NAMESERVER=prod-nameserver:9876
 ```
